@@ -1,6 +1,7 @@
 var vdomParser = require('vdom-parser');
 var diff = require('virtual-dom/diff');
-var patch = require('virtual-dom/patch');
+var serialize = require('vdom-serialized-patch/serialize');
+var patch = require('vdom-serialized-patch/patch');
 
 var domParser = new DOMParser();
 
@@ -16,8 +17,12 @@ function parse(el) {
   return vdom;
 }
 
+function ourDiff(a, b) {
+  return serialize(diff(a, b));
+}
+
 module.exports = {
   parse: parse,
-  diff: diff,
+  diff: ourDiff,
   patch: patch
 };
