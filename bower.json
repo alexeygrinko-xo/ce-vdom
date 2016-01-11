@@ -1,0 +1,22 @@
+{
+  "name": "vdom",
+  "main": "dist/vdom.js",
+  "version": "1.0.0",
+  "authors": [
+    "Santiago Ferreira <santiago.ferreira@wyeworks.com>"
+  ],
+  "description": "vdom libraries bundle",
+  "keywords": [
+    "vdom",
+    "virtual-dom"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/CrazyEggInc/ce-vdom",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
