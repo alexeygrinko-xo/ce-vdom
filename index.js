@@ -3,6 +3,41 @@ var vdomDiff = require('virtual-dom/diff');
 var serialize = require('vdom-serialized-patch/serialize');
 var vdomPatch = require('vdom-serialized-patch/patch');
 
+// Polyfill DOMParser for webkit support (phantomjs)
+// https://developer.mozilla.org/en-US/docs/Web/API/DOMParser#DOMParser_HTML_extension_for_other_browsers
+(function(DOMParser) {
+  "use strict";
+
+  var proto = DOMParser.prototype,
+      nativeParse = proto.parseFromString;
+
+  // Firefox/Opera/IE throw errors on unsupported types
+  try {
+    // WebKit returns null on unsupported types
+    if ((new DOMParser()).parseFromString("", "text/html")) {
+      // text/html parsing is natively supported
+      return;
+    }
+  } catch (ex) {}
+
+  proto.parseFromString = function(markup, type) {
+    if (/^\s*text\/html\s*(?:;|$)/i.test(type)) {
+      var
+      doc = document.implementation.createHTMLDocument("")
+      ;
+      if (markup.toLowerCase().indexOf('<!doctype') > -1) {
+        doc.documentElement.innerHTML = markup;
+      }
+      else {
+        doc.body.innerHTML = markup;
+      }
+      return doc;
+    } else {
+      return nativeParse.apply(this, arguments);
+    }
+  };
+}(DOMParser));
+
 var domParser = new DOMParser();
 
 /**
