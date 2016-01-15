@@ -91,7 +91,8 @@ function diff(before, after) {
  */
 function patch(originalDOM, rootNode, patches, options) {
   // assume diff doesn't bring the `.a` virtual-dom instance
-  patches.a = parse(originalDOM);
+  var vtree = parse(originalDOM);
+  patches.a = serialize(vdomDiff(vtree,vtree)).a;
 
   vdomPatch(rootNode, patches, options);
 }
