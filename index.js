@@ -61,7 +61,7 @@ function parse(el) {
 }
 
 /**
- * Diff two HTML strings
+ * Diff two VDOM elements
  *
  * @param {string} before - Before state
  * @param {string} after - After state
