@@ -68,12 +68,7 @@ function parse(el) {
  * @return {object} CE flavored virtual-dom/diff
  */
 function diff(before, after) {
-  var beforeVTree = parse(before),
-      afterVTree = parse(after),
-      d;
-
-  d = vdomDiff(beforeVTree, afterVTree);
-  d = serialize(d);
+  var d = serialize(vdomDiff(before, after));
 
   // we don't want to store the virtual-dom with the patch
   delete d.a;
