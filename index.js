@@ -1,5 +1,6 @@
 var vdomParser = require('vdom-parser');
 var vdomDiff = require('virtual-dom/diff');
+var vdomCreate = require('virtual-dom/create-element');
 var serialize = require('vdom-serialized-patch/serialize');
 var vdomPatch = require('vdom-serialized-patch/patch');
 
@@ -94,5 +95,6 @@ function patch(originalDOM, rootNode, patches, options) {
 module.exports = {
   parse: parse,
   diff: diff,
-  patch: patch
+  patch: patch,
+  createElement: vdomCreate
 };
