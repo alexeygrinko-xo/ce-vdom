@@ -3,6 +3,7 @@ var vdomDiff = require('virtual-dom/diff');
 var vdomCreate = require('virtual-dom/create-element');
 var serialize = require('vdom-serialized-patch/serialize');
 var vdomPatch = require('vdom-serialized-patch/patch');
+var appendBaseElement = require('./vdom-ext').appendBaseElement;
 
 // Polyfill DOMParser for webkit support (phantomjs)
 // https://developer.mozilla.org/en-US/docs/Web/API/DOMParser#DOMParser_HTML_extension_for_other_browsers
@@ -23,15 +24,15 @@ var vdomPatch = require('vdom-serialized-patch/patch');
 
   proto.parseFromString = function(markup, type) {
     if (/^\s*text\/html\s*(?:;|$)/i.test(type)) {
-      var
-      doc = document.implementation.createHTMLDocument("")
-      ;
+      var doc = document.implementation.createHTMLDocument("");
+
       if (markup.toLowerCase().indexOf('<!doctype') > -1) {
         doc.documentElement.innerHTML = markup;
       }
       else {
         doc.body.innerHTML = markup;
       }
+
       return doc;
     } else {
       return nativeParse.apply(this, arguments);
@@ -96,5 +97,6 @@ module.exports = {
   parse: parse,
   diff: diff,
   patch: patch,
-  createElement: vdomCreate
+  createElement: vdomCreate,
+  appendBaseElement: appendBaseElement
 };
