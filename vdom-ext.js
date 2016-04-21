@@ -58,7 +58,7 @@ function appendBaseElement(root, href) {
     // modify <base> element
     base.properties.attributes = base.properties.attributes || {};
 
-    var actualHref = base.properties.attributes.href || '';
+    var actualHref = base.properties.href || base.properties.attributes.href || '';
 
     if (!(PROTOCOL_RELATIVE_URL.test(actualHref.toLowerCase()) || ABSOLUTE_URL.test(actualHref.toLowerCase()))) {
 
@@ -68,6 +68,7 @@ function appendBaseElement(root, href) {
       }
 
       base.properties.attributes.href = href + actualHref;
+      delete base.properties.href;
     }
   }
 
