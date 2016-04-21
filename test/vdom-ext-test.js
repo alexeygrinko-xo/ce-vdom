@@ -6,8 +6,16 @@ var MUT = require('../vdom-ext');
 var findBaseNode = MUT.findBaseNode;
 var appendBaseElement = MUT.appendBaseElement;
 
-function createBaseElement(href) {
-  return h('base', { attributes: { href: href } }, []);
+function createBaseElement(href, asProperty) {
+  var props = { };
+
+  if (asProperty) {
+    props.href = href;
+  } else {
+    props.attributes = { href: href };
+  }
+
+  return h('base', props, []);
 }
 
 function createTree(baseElement) {
@@ -53,8 +61,15 @@ describe('vdom-ext', function() {
       assertEqualVNode(createBaseElement('http://example.com'), findBaseNode(actual));
     });
 
-    it('updates relative base element', function() {
+    it('updates relative base element from attribute', function() {
       var tree = createTree(createBaseElement('/relative'));
+      var actual = appendBaseElement(tree, 'http://example.com');
+
+      assertEqualVNode(createBaseElement('http://example.com/relative'), findBaseNode(actual));
+    });
+
+    it('updates relative base element from property', function() {
+      var tree = createTree(createBaseElement('/relative', true));
       var actual = appendBaseElement(tree, 'http://example.com');
 
       assertEqualVNode(createBaseElement('http://example.com/relative'), findBaseNode(actual));
