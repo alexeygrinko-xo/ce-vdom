@@ -5,6 +5,8 @@ var h = require('virtual-dom/h');
 var MUT = require('../vdom-ext');
 var findBaseNode = MUT.findBaseNode;
 var appendBaseElement = MUT.appendBaseElement;
+var vNodeSrcCleanup = MUT.vNodeSrcCleanup;
+var patchSrcCleanup = MUT.patchSrcCleanup;
 
 function createBaseElement(href, asProperty) {
   var props = { };
@@ -100,4 +102,67 @@ describe('vdom-ext', function() {
       assert.equal('//crazyegg.com/', findBaseNode(actual).properties.attributes.href);
     });
   });
+
+  var expectedProtocols = ["http", "https", "data"];
+  var unexpectedProtocols = ["chrome-extension", "ftp", "javascript", "test"];
+
+  describe('#vNodeSrcCleanup()', function() {
+    it('keeps src with whitelisted protocol as they are', function() {
+      for (var i = 0; i < expectedProtocols.length; i++) {
+        var protocol = expectedProtocols[i];
+        var node = h('img', { src: protocol + '://test' });
+        var actual = vNodeSrcCleanup(node);
+
+        assert.equal(protocol + '://test', node.properties.src);
+      }
+    });
+
+    it('replaces src that starts with unexpected protocol with an empty gif', function() {
+      for (var i = 0; i < unexpectedProtocols.length; i++) {
+        var protocol = unexpectedProtocols[i];
+        var node = h('img', { src: protocol + '://test' });
+        var actual = vNodeSrcCleanup(node);
+
+        assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.src);
+      }
+    });
+  });
+
+  describe('#patchSrcCleanup()', function() {
+    it('keeps src with whitelisted protocol as they are', function() {
+      for (var i = 0; i < expectedProtocols.length; i++) {
+        var protocol = expectedProtocols[i];
+        var patch = serializedPatch(protocol + '://test');
+        var actual = patchSrcCleanup(patch);
+
+        assert.deepEqual(actual, serializedPatch(protocol + '://test'));
+      }
+    });
+
+    it('replaces src that starts with unexpected protocol with an empty gif', function() {
+      for (var i = 0; i < unexpectedProtocols.length; i++) {
+        var protocol = unexpectedProtocols[i];
+        var patch = serializedPatch(protocol + '://test');
+        var actual = patchSrcCleanup(patch);
+
+        assert.deepEqual(actual, serializedPatch('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
+      }
+    });
+  });
+
+  function serializedPatch(src) {
+    var insertType1 = [6, {"t":3,"tn":"IFRAME","p":{"src": src }}];
+    var insertType2 = [6, {"t":3,"tn":"IFRAME"}];
+    var insertType3 = [6, null];
+    var propsType1  = [4, {"style":{"cursor":"pointer"}}, {"p":{"src": src},"value":"test"}];
+    var propsType2  = [4, {"style":{"cursor":"pointer"}}, {"value":"test"}];
+    var propsType3  = [4, {"style":{"cursor":"pointer"}}, null];
+
+    return {
+      "0": [insertType1, insertType2, propsType1],
+      "1": [propsType2],
+      "2": [insertType3, propsType3],
+      "a": [[null],1]
+    };
+  }
 });
