@@ -30,8 +30,53 @@ function findBaseNode(root) {
   return findNodeOfType(root, 'BASE');
 }
 
+function patchIndices(patches) {
+  var indices = [];
+
+  for (var key in patches) {
+    if (key !== "a") {
+      indices.push(Number(key));
+    }
+  }
+
+  return indices;
+}
+
+function notExpectedProtocol(src) {
+  return STARTS_WITH_PROTOCOL.test(src) && !EXPECTED_PROTOCOL.test(src);
+}
+
+function changePatch(patches) {
+  var patchTypes = require('vdom-serialized-patch/lib/patchTypes');
+
+  for (var i = 0; i < patches.length; i++) {
+    var vpatch = patches[i];
+    var type = vpatch[0];
+    var node;
+
+    switch(type) {
+      case patchTypes.PROPS:
+        node = vpatch[2];
+        break;
+      default:
+        node = vpatch[1];
+        break;
+    }
+
+    if (node && typeof node.p != 'undefined') {
+      var actualSrc = node.p.src || '';
+      if (notExpectedProtocol(actualSrc)) {
+        node.p.src = TRANSPARENT_GIF_DATA;
+      }
+    }
+  }
+}
+
 var PROTOCOL_RELATIVE_URL = /^\/\//;
 var ABSOLUTE_URL = /^https?:\/\//;
+var STARTS_WITH_PROTOCOL = /^[^:]+(?=:\/\/)/i;
+var EXPECTED_PROTOCOL = /^(https?|data):\/\//i;
+var TRANSPARENT_GIF_DATA = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP';
 
 /**
  * Insert a <base> node to a vdom tree
@@ -75,7 +120,51 @@ function appendBaseElement(root, href) {
   return root;
 }
 
+/**
+ * Change src from all node with a src with an unexpected protocol
+ *
+ * @param {VNode}
+ * @return {VNode}
+ */
+function vNodeSrcCleanup(root) {
+  var nodes = [root];
+
+  while(current = nodes.shift()) {
+    if (isVNode(current)) {
+      var actualSrc = current.properties.src || '';
+
+      if (STARTS_WITH_PROTOCOL.test(actualSrc) && !EXPECTED_PROTOCOL.test(actualSrc)) {
+        current.properties.src = TRANSPARENT_GIF_DATA;
+      }
+    }
+
+    merge(nodes, current.children);
+  }
+
+  return root;
+}
+
+/**
+ * Change src from all patches with a src with an unexpected protocol
+ *
+ * @param {SerializedPatch}
+ * @return {SerializedPatch}
+ */
+function patchSrcCleanup(patches) {
+  var indices = patchIndices(patches);
+  for (var i = 0; i < indices.length; i++) {
+    var nodeIndex = indices[i],
+        patchesByIndex = patches[nodeIndex];
+
+    changePatch(patchesByIndex);
+  }
+
+  return patches;
+}
+
 module.exports = {
   findBaseNode: findBaseNode,
-  appendBaseElement: appendBaseElement
+  appendBaseElement: appendBaseElement,
+  vNodeSrcCleanup: vNodeSrcCleanup,
+  patchSrcCleanup: patchSrcCleanup
 };
