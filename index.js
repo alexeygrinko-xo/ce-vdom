@@ -48,17 +48,18 @@ var domParser = new DOMParser();
  * Parse a HTML string or HTMLElement into a VTree
  *
  * @param {string|HTMLElement} - element to parse
+ * @param {Object} - options (egg: { censor: ['input'] })
  * @returns {VTree} virtual tree representation
  */
-function parse(el) {
+function parse(el, options) {
   var vdom;
 
   if (typeof el === 'string') {
     // vdom-serialized-patch/serialize doesn't handle pages with more than one
     // element on the body. This is a workaround.
-    vdom = vdomParser(domParser.parseFromString(el, 'text/html').body);
+    vdom = vdomParser(domParser.parseFromString(el, 'text/html').body, options);
   } else {
-    vdom = vdomParser(el);
+    vdom = vdomParser(el, options);
   }
 
   return vdom;
