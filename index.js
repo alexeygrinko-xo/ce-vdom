@@ -4,7 +4,7 @@ var vdomCreate = require('virtual-dom/create-element');
 var serialize = require('vdom-serialized-patch/serialize');
 var vdomPatch = require('vdom-serialized-patch/patch');
 var appendBaseElement = require('./vdom-ext').appendBaseElement;
-var vNodeSrcCleanup = require('./vdom-ext').vNodeSrcCleanup;
+var vNodeCleanupUrls = require('./vdom-ext').vNodeCleanupUrls;
 var patchSrcCleanup = require('./vdom-ext').patchSrcCleanup;
 
 // Polyfill DOMParser for webkit support (phantomjs)
@@ -102,6 +102,6 @@ module.exports = {
   patch: patch,
   createElement: vdomCreate,
   appendBaseElement: appendBaseElement,
-  vNodeSrcCleanup: vNodeSrcCleanup,
+  vNodeCleanupUrls: vNodeCleanupUrls,
   patchSrcCleanup: patchSrcCleanup
 };

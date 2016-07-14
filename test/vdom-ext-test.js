@@ -5,7 +5,7 @@ var h = require('virtual-dom/h');
 var MUT = require('../vdom-ext');
 var findBaseNode = MUT.findBaseNode;
 var appendBaseElement = MUT.appendBaseElement;
-var vNodeSrcCleanup = MUT.vNodeSrcCleanup;
+var vNodeCleanupUrls = MUT.vNodeCleanupUrls;
 var patchSrcCleanup = MUT.patchSrcCleanup;
 
 function createBaseElement(href, asProperty) {
@@ -106,14 +106,44 @@ describe('vdom-ext', function() {
   var expectedProtocols = ["http", "https", "data"];
   var unexpectedProtocols = ["chrome-extension", "ftp", "javascript", "test"];
 
-  describe('#vNodeSrcCleanup()', function() {
-    it('keeps src with whitelisted protocol as they are', function() {
-      for (var i = 0; i < expectedProtocols.length; i++) {
-        var protocol = expectedProtocols[i];
-        var node = h('img', { src: protocol + '://test' });
-        var actual = vNodeSrcCleanup(node);
+  var proxyUrl = "https://proxy.com/proxy/";
+  var validUrls = [
+    "http://test.com/img.jpg",
+    "http://test.com/img.jpg?width=100&height=200",
+    "https://test.com/img.jpg",
+    "https://test.com/img.jpg?width=100&height=200",
+    "//test.com/img.jpg",
+    "//test.com/img.jpg?width=100&height=200",
+    "/img.jpg",
+    "img.png"
+  ];
+  var expandedUrls = [
+    "http:/test.com/img.jpg",
+    "http:/test.com/img.jpg?width=100&height=200",
+    "https:/test.com/img.jpg",
+    "https:/test.com/img.jpg?width=100&height=200",
+    "http:/test.com/img.jpg",
+    "http:/test.com/img.jpg?width=100&height=200",
+    "http:/test.com/img.jpg",
+    "http:/test.com/img.png"
+  ];
 
-        assert.equal(protocol + '://test', node.properties.src);
+  describe('#vNodeCleanupUrls()', function() {
+    it('replaces all src adding the proxy url and passing the src value expanded', function() {
+      for (var i = 0; i < validUrls.length; i++) {
+        var node = h('img', { src: validUrls[i] });
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
+
+        assert.equal(proxyUrl + expandedUrls[i], node.properties.src);
+      }
+    });
+
+    it('replaces all href adding the proxy url and passing the href value expanded', function() {
+      for (var i = 0; i < validUrls.length; i++) {
+        var node = h('link', { href: validUrls[i] });
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
+
+        assert.equal(proxyUrl + expandedUrls[i], node.properties.href);
       }
     });
 
@@ -121,9 +151,19 @@ describe('vdom-ext', function() {
       for (var i = 0; i < unexpectedProtocols.length; i++) {
         var protocol = unexpectedProtocols[i];
         var node = h('img', { src: protocol + '://test' });
-        var actual = vNodeSrcCleanup(node);
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
 
         assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.src);
+      }
+    });
+
+    it('replaces href that starts with unexpected protocol with an empty gif', function() {
+      for (var i = 0; i < unexpectedProtocols.length; i++) {
+        var protocol = unexpectedProtocols[i];
+        var node = h('img', { href: protocol + '://test' });
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
+
+        assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.href);
       }
     });
   });

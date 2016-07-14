@@ -1,6 +1,7 @@
 var isVNode = require('virtual-dom/vnode/is-vnode');
 var isVText = require('virtual-dom/vnode/is-vtext');
 var h = require('virtual-dom/h');
+var urlParser = require('url');
 
 /**
  * vdom extensions
@@ -72,6 +73,20 @@ function changePatch(patches) {
   }
 }
 
+function expandUrl(pageUrl, url) {
+  return urlParser.resolve(pageUrl, url);
+}
+
+function removeOneSlash(url) {
+  return url.replace(/(https?):\/\//, '$1:/');
+}
+
+function addProxyUrl(proxyUrl, pageUrl, url) {
+  var expandedURL = expandUrl(pageUrl, url);
+
+  return proxyUrl + removeOneSlash(expandedURL);
+}
+
 var PROTOCOL_RELATIVE_URL = /^\/\//;
 var ABSOLUTE_URL = /^https?:\/\//;
 var STARTS_WITH_PROTOCOL = /^[^:]+(?=:\/\/)/i;
@@ -124,17 +139,26 @@ function appendBaseElement(root, href) {
  * Change src from all node with a src with an unexpected protocol
  *
  * @param {VNode}
+ * @param {String} - proxy URL
+ * @param {String} - original page URL
  * @return {VNode}
  */
-function vNodeSrcCleanup(root) {
+function vNodeCleanupUrls(root, proxyUrl, pageUrl) {
   var nodes = [root];
+  var properties = ['src', 'href'];
 
   while(current = nodes.shift()) {
     if (isVNode(current)) {
-      var actualSrc = current.properties.src || '';
+      for(var i = 0; i < properties.length; i++) {
+        var prop = properties[i];
+        var propValue = current.properties[prop] || '';
 
-      if (STARTS_WITH_PROTOCOL.test(actualSrc) && !EXPECTED_PROTOCOL.test(actualSrc)) {
-        current.properties.src = TRANSPARENT_GIF_DATA;
+        if (notExpectedProtocol(propValue)) {
+          current.properties[prop] = TRANSPARENT_GIF_DATA;
+        } else if (propValue != '') {
+          var proxySrc = addProxyUrl(proxyUrl, pageUrl, propValue);
+          current.properties[prop] = proxySrc;
+        }
       }
     }
 
@@ -165,6 +189,6 @@ function patchSrcCleanup(patches) {
 module.exports = {
   findBaseNode: findBaseNode,
   appendBaseElement: appendBaseElement,
-  vNodeSrcCleanup: vNodeSrcCleanup,
+  vNodeCleanupUrls: vNodeCleanupUrls,
   patchSrcCleanup: patchSrcCleanup
 };
