@@ -3,6 +3,7 @@ var vdomDiff = require('virtual-dom/diff');
 var vdomCreate = require('virtual-dom/create-element');
 var serialize = require('vdom-serialized-patch/serialize');
 var vdomPatch = require('vdom-serialized-patch/patch');
+var findBaseNode = require('./vdom-ext').findBaseNode;
 var appendBaseElement = require('./vdom-ext').appendBaseElement;
 var vNodeCleanupUrls = require('./vdom-ext').vNodeCleanupUrls;
 var patchCleanupUrls = require('./vdom-ext').patchCleanupUrls;
@@ -101,6 +102,7 @@ module.exports = {
   diff: diff,
   patch: patch,
   createElement: vdomCreate,
+  findBaseNode: findBaseNode,
   appendBaseElement: appendBaseElement,
   vNodeCleanupUrls: vNodeCleanupUrls,
   patchCleanupUrls: patchCleanupUrls
