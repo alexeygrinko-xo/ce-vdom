@@ -129,82 +129,128 @@ describe('vdom-ext', function() {
   ];
 
   describe('#vNodeCleanupUrls()', function() {
-    it('replaces all src adding the proxy url and passing the src value expanded', function() {
-      for (var i = 0; i < validUrls.length; i++) {
-        var node = h('img', { src: validUrls[i] });
-        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
+    describe('when replace all is true', function() {
+      it('replaces all src adding the proxy url and passing the src value expanded', function() {
+        for (var i = 0; i < validUrls.length; i++) {
+          var node = h('img', { src: validUrls[i] });
+          var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
 
-        assert.equal(proxyUrl + expandedUrls[i], node.properties.src);
-      }
+          assert.equal(proxyUrl + expandedUrls[i], node.properties.src);
+        }
+      });
+
+      it('replaces all href adding the proxy url and passing the href value expanded', function() {
+        for (var i = 0; i < validUrls.length; i++) {
+          var node = h('link', { href: validUrls[i] });
+          var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
+
+          assert.equal(proxyUrl + expandedUrls[i], node.properties.href);
+        }
+      });
+
+      it('replaces src that starts with unexpected protocol with an empty gif', function() {
+        for (var i = 0; i < unexpectedProtocols.length; i++) {
+          var protocol = unexpectedProtocols[i];
+          var node = h('img', { src: protocol + '://test' });
+          var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
+
+          assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.src);
+        }
+      });
+
+      it('replaces href that starts with unexpected protocol with an empty gif', function() {
+        for (var i = 0; i < unexpectedProtocols.length; i++) {
+          var protocol = unexpectedProtocols[i];
+          var node = h('img', { href: protocol + '://test' });
+          var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
+
+          assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.href);
+        }
+      });
     });
 
-    it('replaces all href adding the proxy url and passing the href value expanded', function() {
-      for (var i = 0; i < validUrls.length; i++) {
-        var node = h('link', { href: validUrls[i] });
-        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
+    describe('when replace all is false', function() {
+      it('does not replace src that not start with unexpected protocol', function() {
+        for (var i = 0; i < validUrls.length; i++) {
+          var node = h('img', { src: validUrls[i] });
+          var actual = vNodeCleanupUrls(false, node, proxyUrl, 'http://test.com/');
 
-        assert.equal(proxyUrl + expandedUrls[i], node.properties.href);
-      }
-    });
+          assert.equal(validUrls[i], node.properties.src);
+        }
+      });
 
-    it('replaces src that starts with unexpected protocol with an empty gif', function() {
-      for (var i = 0; i < unexpectedProtocols.length; i++) {
-        var protocol = unexpectedProtocols[i];
-        var node = h('img', { src: protocol + '://test' });
-        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
+      it('replaces src that starts with unexpected protocol with an empty gif', function() {
+        for (var i = 0; i < unexpectedProtocols.length; i++) {
+          var protocol = unexpectedProtocols[i];
+          var node = h('img', { src: protocol + '://test' });
+          var actual = vNodeCleanupUrls(false, node, proxyUrl, 'http://test.com/');
 
-        assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.src);
-      }
-    });
-
-    it('replaces href that starts with unexpected protocol with an empty gif', function() {
-      for (var i = 0; i < unexpectedProtocols.length; i++) {
-        var protocol = unexpectedProtocols[i];
-        var node = h('img', { href: protocol + '://test' });
-        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
-
-        assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.href);
-      }
+          assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.src);
+        }
+      });
     });
   });
 
   describe('#patchCleanupUrls()', function() {
-    it('replaces all src adding the proxy url and passing the src value expanded', function() {
-      for (var i = 0; i < validUrls.length; i++) {
-        var patch = serializedPatch('src', validUrls[i]);
-        var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
+    describe('when replace all is true', function() {
+      it('replaces all src adding the proxy url and passing the src value expanded', function() {
+        for (var i = 0; i < validUrls.length; i++) {
+          var patch = serializedPatch('src', validUrls[i]);
+          var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
 
-        assert.deepEqual(actual, serializedPatch('src', proxyUrl + expandedUrls[i]));
-      }
+          assert.deepEqual(actual, serializedPatch('src', proxyUrl + expandedUrls[i]));
+        }
+      });
+
+      it('replaces all href adding the proxy url and passing the src value expanded', function() {
+        for (var i = 0; i < validUrls.length; i++) {
+          var patch = serializedPatch('href', validUrls[i]);
+          var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
+
+          assert.deepEqual(actual, serializedPatch('href', proxyUrl + expandedUrls[i]));
+        }
+      });
+
+      it('replaces src that starts with unexpected protocol with an empty gif', function() {
+        for (var i = 0; i < unexpectedProtocols.length; i++) {
+          var protocol = unexpectedProtocols[i];
+          var patch = serializedPatch('src', protocol + '://test');
+          var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
+
+          assert.deepEqual(actual, serializedPatch('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
+        }
+      });
+
+      it('replaces href that starts with unexpected protocol with an empty gif', function() {
+        for (var i = 0; i < unexpectedProtocols.length; i++) {
+          var protocol = unexpectedProtocols[i];
+          var patch = serializedPatch('href', protocol + '://test');
+          var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
+
+          assert.deepEqual(actual, serializedPatch('href', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
+        }
+      });
     });
 
-    it('replaces all href adding the proxy url and passing the src value expanded', function() {
-      for (var i = 0; i < validUrls.length; i++) {
-        var patch = serializedPatch('href', validUrls[i]);
-        var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
+    describe('when replace all is false', function() {
+      it('does not replace src that not start with unexpected protocol', function() {
+        for (var i = 0; i < validUrls.length; i++) {
+          var patch = serializedPatch('src', validUrls[i]);
+          var actual = patchCleanupUrls(false, patch, proxyUrl, 'http://test.com/');
 
-        assert.deepEqual(actual, serializedPatch('href', proxyUrl + expandedUrls[i]));
-      }
-    });
+          assert.deepEqual(actual, serializedPatch('src', validUrls[i]));
+        }
+      });
 
-    it('replaces src that starts with unexpected protocol with an empty gif', function() {
-      for (var i = 0; i < unexpectedProtocols.length; i++) {
-        var protocol = unexpectedProtocols[i];
-        var patch = serializedPatch('src', protocol + '://test');
-        var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
+      it('replaces src that starts with unexpected protocol with an empty gif', function() {
+        for (var i = 0; i < unexpectedProtocols.length; i++) {
+          var protocol = unexpectedProtocols[i];
+          var patch = serializedPatch('src', protocol + '://test');
+          var actual = patchCleanupUrls(false, patch, proxyUrl, 'http://test.com/');
 
-        assert.deepEqual(actual, serializedPatch('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
-      }
-    });
-
-    it('replaces href that starts with unexpected protocol with an empty gif', function() {
-      for (var i = 0; i < unexpectedProtocols.length; i++) {
-        var protocol = unexpectedProtocols[i];
-        var patch = serializedPatch('href', protocol + '://test');
-        var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
-
-        assert.deepEqual(actual, serializedPatch('href', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
-      }
+          assert.deepEqual(actual, serializedPatch('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
+        }
+      });
     });
   });
 

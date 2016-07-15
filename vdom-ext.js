@@ -47,7 +47,7 @@ function notExpectedProtocol(src) {
   return STARTS_WITH_PROTOCOL.test(src) && !EXPECTED_PROTOCOL.test(src);
 }
 
-function changePatch(patches, proxyUrl, pageUrl) {
+function changePatch(replaceAll, patches, proxyUrl, pageUrl) {
   var patchTypes = require('vdom-serialized-patch/lib/patchTypes');
   var properties = ['src', 'href'];
 
@@ -73,7 +73,7 @@ function changePatch(patches, proxyUrl, pageUrl) {
         if (propValue != '') {
           if (notExpectedProtocol(propValue)) {
             node.p[prop] = TRANSPARENT_GIF_DATA;
-          } else {
+          } else if(replaceAll) {
             var proxySrc = addProxyUrl(proxyUrl, pageUrl, propValue);
             node.p[prop] = proxySrc;
           }
@@ -150,10 +150,10 @@ function appendBaseElement(root, href) {
  *
  * @param {VNode}
  * @param {String} - proxy URL
- * @param {String} - original page URL
+ * @param {String} - base URL
  * @return {VNode}
  */
-function vNodeCleanupUrls(root, proxyUrl, pageUrl) {
+function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
   var nodes = [root];
   var properties = ['src', 'href'];
 
@@ -165,8 +165,8 @@ function vNodeCleanupUrls(root, proxyUrl, pageUrl) {
 
         if (notExpectedProtocol(propValue)) {
           current.properties[prop] = TRANSPARENT_GIF_DATA;
-        } else if (propValue != '') {
-          var proxySrc = addProxyUrl(proxyUrl, pageUrl, propValue);
+        } else if (propValue != '' && replaceAll) {
+          var proxySrc = addProxyUrl(proxyUrl, baseUrl, propValue);
           current.properties[prop] = proxySrc;
         }
       }
@@ -183,16 +183,16 @@ function vNodeCleanupUrls(root, proxyUrl, pageUrl) {
  *
  * @param {SerializedPatch}
  * @param {String} - proxy URL
- * @param {String} - original page URL
+ * @param {String} - base URL
  * @return {SerializedPatch}
  */
-function patchCleanupUrls(patches, proxyUrl, pageUrl) {
+function patchCleanupUrls(replaceAll, patches, proxyUrl, baseUrl) {
   var indices = patchIndices(patches);
   for (var i = 0; i < indices.length; i++) {
     var nodeIndex = indices[i],
         patchesByIndex = patches[nodeIndex];
 
-    changePatch(patchesByIndex, proxyUrl, pageUrl);
+    changePatch(replaceAll, patchesByIndex, proxyUrl, baseUrl);
   }
 
   return patches;
