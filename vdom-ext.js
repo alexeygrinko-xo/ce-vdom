@@ -47,8 +47,9 @@ function notExpectedProtocol(src) {
   return STARTS_WITH_PROTOCOL.test(src) && !EXPECTED_PROTOCOL.test(src);
 }
 
-function changePatch(patches) {
+function changePatch(patches, proxyUrl, pageUrl) {
   var patchTypes = require('vdom-serialized-patch/lib/patchTypes');
+  var properties = ['src', 'href'];
 
   for (var i = 0; i < patches.length; i++) {
     var vpatch = patches[i];
@@ -64,10 +65,19 @@ function changePatch(patches) {
         break;
     }
 
-    if (node && typeof node.p != 'undefined') {
-      var actualSrc = node.p.src || '';
-      if (notExpectedProtocol(actualSrc)) {
-        node.p.src = TRANSPARENT_GIF_DATA;
+    for (var j = 0; j < properties.length ; j++) {
+      if (node && typeof node.p != 'undefined') {
+        var prop = properties[j];
+        var propValue = node.p[prop] || '';
+
+        if (propValue != '') {
+          if (notExpectedProtocol(propValue)) {
+            node.p[prop] = TRANSPARENT_GIF_DATA;
+          } else {
+            var proxySrc = addProxyUrl(proxyUrl, pageUrl, propValue);
+            node.p[prop] = proxySrc;
+          }
+        }
       }
     }
   }
@@ -172,15 +182,17 @@ function vNodeCleanupUrls(root, proxyUrl, pageUrl) {
  * Change src from all patches with a src with an unexpected protocol
  *
  * @param {SerializedPatch}
+ * @param {String} - proxy URL
+ * @param {String} - original page URL
  * @return {SerializedPatch}
  */
-function patchSrcCleanup(patches) {
+function patchCleanupUrls(patches, proxyUrl, pageUrl) {
   var indices = patchIndices(patches);
   for (var i = 0; i < indices.length; i++) {
     var nodeIndex = indices[i],
         patchesByIndex = patches[nodeIndex];
 
-    changePatch(patchesByIndex);
+    changePatch(patchesByIndex, proxyUrl, pageUrl);
   }
 
   return patches;
@@ -190,5 +202,5 @@ module.exports = {
   findBaseNode: findBaseNode,
   appendBaseElement: appendBaseElement,
   vNodeCleanupUrls: vNodeCleanupUrls,
-  patchSrcCleanup: patchSrcCleanup
+  patchCleanupUrls: patchCleanupUrls
 };
