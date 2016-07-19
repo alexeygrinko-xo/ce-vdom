@@ -47,39 +47,48 @@ function notExpectedProtocol(src) {
   return STARTS_WITH_PROTOCOL.test(src) && !EXPECTED_PROTOCOL.test(src);
 }
 
-function changePatch(replaceAll, patches, proxyUrl, pageUrl) {
-  var patchTypes = require('vdom-serialized-patch/lib/patchTypes');
-  var properties = ['src', 'href'];
+function processNodeProperties(nodeProperties, options) {
+  var urlProperties = ['src', 'href'];
 
-  for (var i = 0; i < patches.length; i++) {
-    var vpatch = patches[i];
-    var type = vpatch[0];
-    var node;
+  urlProperties.forEach(function(property) {
+    var propValue = nodeProperties[property];
 
-    switch(type) {
-      case patchTypes.PROPS:
-        node = vpatch[2];
-        break;
-      default:
-        node = vpatch[1];
-        break;
+    if (!propValue) {
+      return;
     }
 
-    for (var j = 0; j < properties.length ; j++) {
-      if (node && typeof node.p != 'undefined') {
-        var prop = properties[j];
-        var propValue = node.p[prop] || '';
+    if (notExpectedProtocol(propValue)) {
+      nodeProperties[property] = TRANSPARENT_GIF_DATA;
+    } else if (options.replaceAll) {
+      nodeProperties[property] = addProxyUrl(options.proxyUrl, options.baseUrl, propValue);;
+    }
+  });
+}
 
-        if (propValue != '') {
-          if (notExpectedProtocol(propValue)) {
-            node.p[prop] = TRANSPARENT_GIF_DATA;
-          } else if(replaceAll) {
-            var proxySrc = addProxyUrl(proxyUrl, pageUrl, propValue);
-            node.p[prop] = proxySrc;
-          }
-        }
+function processNode(node, options) {
+  if (node && typeof node === 'object' && node !== null) {
+    if (node.c) {
+      for (var i = 0; i < node.c.length; i++) {
+        processNode(node.c[i], options);
       }
     }
+    if (node.p) {
+      processNodeProperties(node.p, options);
+    }
+  }
+}
+
+function changePatch(patches, options) {
+  for (var i = 0; i < patches.length; i++) {
+    var vpatch = patches[i];
+
+    if (vpatch[0] === 4 /*properties*/) {
+      processNode({ p: vpatch[1] }, options);
+    } else {
+      processNode(vpatch[1], options);
+    }
+
+    processNode(vpatch[2], options);
   }
 }
 
@@ -88,7 +97,7 @@ function expandUrl(pageUrl, url) {
 }
 
 function removeOneSlash(url) {
-  return url.replace(/(https?):\/\//, '$1:/');
+  return url.replace(/(https?):\/\//i, '$1:/');
 }
 
 function addProxyUrl(proxyUrl, pageUrl, url) {
@@ -96,6 +105,13 @@ function addProxyUrl(proxyUrl, pageUrl, url) {
 
   return proxyUrl + removeOneSlash(expandedURL);
 }
+
+function findUrlsAndAddProxyUrl(proxyUrl, pageUrl, value) {
+  return value.replace(/url\((\"|\')(.*?)(\"|\')\)/ig, function(match, p1, p2, p3) {
+    return "url(" + p1 + addProxyUrl(proxyUrl, pageUrl, p2) + p3 + ")";
+  });
+}
+
 
 var PROTOCOL_RELATIVE_URL = /^\/\//;
 var ABSOLUTE_URL = /^https?:\/\//;
@@ -155,19 +171,29 @@ function appendBaseElement(root, href) {
  */
 function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
   var nodes = [root];
-  var properties = ['src', 'href'];
+  var urlProperties = ['src', 'href'];
+  var cssProperties = ['style'];
 
   while(current = nodes.shift()) {
     if (isVNode(current)) {
-      for(var i = 0; i < properties.length; i++) {
-        var prop = properties[i];
+      for(var i = 0; i < urlProperties.length; i++) {
+        var prop = urlProperties[i];
         var propValue = current.properties[prop] || '';
 
         if (notExpectedProtocol(propValue)) {
           current.properties[prop] = TRANSPARENT_GIF_DATA;
         } else if (propValue != '' && replaceAll) {
-          var proxySrc = addProxyUrl(proxyUrl, baseUrl, propValue);
-          current.properties[prop] = proxySrc;
+          var proxyUrl = addProxyUrl(proxyUrl, baseUrl, propValue);
+          current.properties[prop] = proxyUrl;
+        }
+      }
+      for(var i = 0; i < cssProperties.length; i++) {
+        var prop = cssProperties[i];
+        var propValue = current.properties[prop] || '';
+
+        if (propValue != '' && replaceAll) {
+          var value = findUrlsAndAddProxyUrl(proxyUrl, baseUrl, propValue);
+          current.properties[prop] = value;
         }
       }
     }
@@ -181,19 +207,16 @@ function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
 /**
  * Change src from all patches with a src with an unexpected protocol
  *
+ * @param {Boolean} - TRUE to modify "src" and "href" attributes
  * @param {SerializedPatch}
  * @param {String} - proxy URL
  * @param {String} - base URL
  * @return {SerializedPatch}
  */
 function patchCleanupUrls(replaceAll, patches, proxyUrl, baseUrl) {
-  var indices = patchIndices(patches);
-  for (var i = 0; i < indices.length; i++) {
-    var nodeIndex = indices[i],
-        patchesByIndex = patches[nodeIndex];
-
-    changePatch(replaceAll, patchesByIndex, proxyUrl, baseUrl);
-  }
+  patchIndices(patches).forEach(function(index) {
+    changePatch(patches[index], { proxyUrl: proxyUrl, baseUrl: baseUrl, replaceAll: replaceAll });
+  });
 
   return patches;
 }
