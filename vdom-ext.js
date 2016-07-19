@@ -1,6 +1,7 @@
 var isVNode = require('virtual-dom/vnode/is-vnode');
 var isVText = require('virtual-dom/vnode/is-vtext');
 var h = require('virtual-dom/h');
+var urlParser = require('url');
 
 /**
  * vdom extensions
@@ -46,31 +47,71 @@ function notExpectedProtocol(src) {
   return STARTS_WITH_PROTOCOL.test(src) && !EXPECTED_PROTOCOL.test(src);
 }
 
-function changePatch(patches) {
-  var patchTypes = require('vdom-serialized-patch/lib/patchTypes');
+function processNodeProperties(nodeProperties, options) {
+  var urlProperties = ['src', 'href'];
 
-  for (var i = 0; i < patches.length; i++) {
-    var vpatch = patches[i];
-    var type = vpatch[0];
-    var node;
+  urlProperties.forEach(function(property) {
+    var propValue = nodeProperties[property];
 
-    switch(type) {
-      case patchTypes.PROPS:
-        node = vpatch[2];
-        break;
-      default:
-        node = vpatch[1];
-        break;
+    if (!propValue) {
+      return;
     }
 
-    if (node && typeof node.p != 'undefined') {
-      var actualSrc = node.p.src || '';
-      if (notExpectedProtocol(actualSrc)) {
-        node.p.src = TRANSPARENT_GIF_DATA;
+    if (notExpectedProtocol(propValue)) {
+      nodeProperties[property] = TRANSPARENT_GIF_DATA;
+    } else if (options.replaceAll) {
+      nodeProperties[property] = addProxyUrl(options.proxyUrl, options.baseUrl, propValue);;
+    }
+  });
+}
+
+function processNode(node, options) {
+  if (node && typeof node === 'object' && node !== null) {
+    if (node.c) {
+      for (var i = 0; i < node.c.length; i++) {
+        processNode(node.c[i], options);
       }
+    }
+    if (node.p) {
+      processNodeProperties(node.p, options);
     }
   }
 }
+
+function changePatch(patches, options) {
+  for (var i = 0; i < patches.length; i++) {
+    var vpatch = patches[i];
+
+    if (vpatch[0] === 4 /*properties*/) {
+      processNode({ p: vpatch[1] }, options);
+    } else {
+      processNode(vpatch[1], options);
+    }
+
+    processNode(vpatch[2], options);
+  }
+}
+
+function expandUrl(pageUrl, url) {
+  return urlParser.resolve(pageUrl, url);
+}
+
+function removeOneSlash(url) {
+  return url.replace(/(https?):\/\//i, '$1:/');
+}
+
+function addProxyUrl(proxyUrl, pageUrl, url) {
+  var expandedURL = expandUrl(pageUrl, url);
+
+  return proxyUrl + removeOneSlash(expandedURL);
+}
+
+function findUrlsAndAddProxyUrl(proxyUrl, pageUrl, value) {
+  return value.replace(/url\((\"|\')(.*?)(\"|\')\)/ig, function(match, p1, p2, p3) {
+    return "url(" + p1 + addProxyUrl(proxyUrl, pageUrl, p2) + p3 + ")";
+  });
+}
+
 
 var PROTOCOL_RELATIVE_URL = /^\/\//;
 var ABSOLUTE_URL = /^https?:\/\//;
@@ -124,17 +165,36 @@ function appendBaseElement(root, href) {
  * Change src from all node with a src with an unexpected protocol
  *
  * @param {VNode}
+ * @param {String} - proxy URL
+ * @param {String} - base URL
  * @return {VNode}
  */
-function vNodeSrcCleanup(root) {
+function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
   var nodes = [root];
+  var urlProperties = ['src', 'href'];
+  var cssProperties = ['style'];
 
   while(current = nodes.shift()) {
     if (isVNode(current)) {
-      var actualSrc = current.properties.src || '';
+      for(var i = 0; i < urlProperties.length; i++) {
+        var prop = urlProperties[i];
+        var propValue = current.properties[prop] || '';
 
-      if (STARTS_WITH_PROTOCOL.test(actualSrc) && !EXPECTED_PROTOCOL.test(actualSrc)) {
-        current.properties.src = TRANSPARENT_GIF_DATA;
+        if (notExpectedProtocol(propValue)) {
+          current.properties[prop] = TRANSPARENT_GIF_DATA;
+        } else if (propValue != '' && replaceAll) {
+          var proxyUrl = addProxyUrl(proxyUrl, baseUrl, propValue);
+          current.properties[prop] = proxyUrl;
+        }
+      }
+      for(var i = 0; i < cssProperties.length; i++) {
+        var prop = cssProperties[i];
+        var propValue = current.properties[prop] || '';
+
+        if (propValue != '' && replaceAll) {
+          var value = findUrlsAndAddProxyUrl(proxyUrl, baseUrl, propValue);
+          current.properties[prop] = value;
+        }
       }
     }
 
@@ -147,17 +207,16 @@ function vNodeSrcCleanup(root) {
 /**
  * Change src from all patches with a src with an unexpected protocol
  *
+ * @param {Boolean} - TRUE to modify "src" and "href" attributes
  * @param {SerializedPatch}
+ * @param {String} - proxy URL
+ * @param {String} - base URL
  * @return {SerializedPatch}
  */
-function patchSrcCleanup(patches) {
-  var indices = patchIndices(patches);
-  for (var i = 0; i < indices.length; i++) {
-    var nodeIndex = indices[i],
-        patchesByIndex = patches[nodeIndex];
-
-    changePatch(patchesByIndex);
-  }
+function patchCleanupUrls(replaceAll, patches, proxyUrl, baseUrl) {
+  patchIndices(patches).forEach(function(index) {
+    changePatch(patches[index], { proxyUrl: proxyUrl, baseUrl: baseUrl, replaceAll: replaceAll });
+  });
 
   return patches;
 }
@@ -165,6 +224,6 @@ function patchSrcCleanup(patches) {
 module.exports = {
   findBaseNode: findBaseNode,
   appendBaseElement: appendBaseElement,
-  vNodeSrcCleanup: vNodeSrcCleanup,
-  patchSrcCleanup: patchSrcCleanup
+  vNodeCleanupUrls: vNodeCleanupUrls,
+  patchCleanupUrls: patchCleanupUrls
 };

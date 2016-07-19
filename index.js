@@ -3,9 +3,10 @@ var vdomDiff = require('virtual-dom/diff');
 var vdomCreate = require('virtual-dom/create-element');
 var serialize = require('vdom-serialized-patch/serialize');
 var vdomPatch = require('vdom-serialized-patch/patch');
+var findBaseNode = require('./vdom-ext').findBaseNode;
 var appendBaseElement = require('./vdom-ext').appendBaseElement;
-var vNodeSrcCleanup = require('./vdom-ext').vNodeSrcCleanup;
-var patchSrcCleanup = require('./vdom-ext').patchSrcCleanup;
+var vNodeCleanupUrls = require('./vdom-ext').vNodeCleanupUrls;
+var patchCleanupUrls = require('./vdom-ext').patchCleanupUrls;
 
 // Polyfill DOMParser for webkit support (phantomjs)
 // https://developer.mozilla.org/en-US/docs/Web/API/DOMParser#DOMParser_HTML_extension_for_other_browsers
@@ -101,7 +102,8 @@ module.exports = {
   diff: diff,
   patch: patch,
   createElement: vdomCreate,
+  findBaseNode: findBaseNode,
   appendBaseElement: appendBaseElement,
-  vNodeSrcCleanup: vNodeSrcCleanup,
-  patchSrcCleanup: patchSrcCleanup
+  vNodeCleanupUrls: vNodeCleanupUrls,
+  patchCleanupUrls: patchCleanupUrls
 };
