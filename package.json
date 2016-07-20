@@ -16,8 +16,9 @@
     "mocha": "^2.4.5"
   },
   "dependencies": {
+    "querystring": "^0.2.0",
     "vdom-parser": "CrazyEggInc/vdom-parser",
-    "virtual-dom": "^2.1.1",
-    "vdom-serialized-patch": "^1.0.3"
+    "vdom-serialized-patch": "^1.0.3",
+    "virtual-dom": "^2.1.1"
   }
 }

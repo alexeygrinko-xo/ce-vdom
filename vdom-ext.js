@@ -101,17 +101,11 @@ function removeOneSlash(url) {
 }
 
 function addProxyUrl(proxyUrl, pageUrl, url) {
+  var qs = require('querystring');
   var expandedURL = expandUrl(pageUrl, url);
 
-  return proxyUrl + removeOneSlash(expandedURL);
+  return proxyUrl + qs.escape(removeOneSlash(expandedURL));
 }
-
-function findUrlsAndAddProxyUrl(proxyUrl, pageUrl, value) {
-  return value.replace(/url\((\"|\')(.*?)(\"|\')\)/ig, function(match, p1, p2, p3) {
-    return "url(" + p1 + addProxyUrl(proxyUrl, pageUrl, p2) + p3 + ")";
-  });
-}
-
 
 var PROTOCOL_RELATIVE_URL = /^\/\//;
 var ABSOLUTE_URL = /^https?:\/\//;
@@ -185,15 +179,6 @@ function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
         } else if (propValue != '' && replaceAll) {
           var proxyUrl = addProxyUrl(proxyUrl, baseUrl, propValue);
           current.properties[prop] = proxyUrl;
-        }
-      }
-      for(var i = 0; i < cssProperties.length; i++) {
-        var prop = cssProperties[i];
-        var propValue = current.properties[prop] || '';
-
-        if (propValue != '' && replaceAll) {
-          var value = findUrlsAndAddProxyUrl(proxyUrl, baseUrl, propValue);
-          current.properties[prop] = value;
         }
       }
     }
