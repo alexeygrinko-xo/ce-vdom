@@ -101,9 +101,10 @@ function removeOneSlash(url) {
 }
 
 function addProxyUrl(proxyUrl, pageUrl, url) {
+  var qs = require('querystring');
   var expandedURL = expandUrl(pageUrl, url);
 
-  return proxyUrl + removeOneSlash(expandedURL);
+  return proxyUrl + qs.escape(removeOneSlash(expandedURL));
 }
 
 function findUrlsAndAddProxyUrl(proxyUrl, pageUrl, value) {
