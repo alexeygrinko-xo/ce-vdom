@@ -165,21 +165,10 @@ function appendBaseElement(root, href) {
 function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
   var nodes = [root];
   var urlProperties = ['src', 'href'];
-  var cssProperties = ['style'];
 
   while(current = nodes.shift()) {
     if (isVNode(current)) {
-      for(var i = 0; i < urlProperties.length; i++) {
-        var prop = urlProperties[i];
-        var propValue = current.properties[prop] || '';
-
-        if (notExpectedProtocol(propValue)) {
-          current.properties[prop] = TRANSPARENT_GIF_DATA;
-        } else if (propValue != '' && replaceAll) {
-          var proxyUrl = addProxyUrl(proxyUrl, baseUrl, propValue);
-          current.properties[prop] = proxyUrl;
-        }
-      }
+      processNodeProperties(current.properties, { proxyUrl: proxyUrl, baseUrl: baseUrl, replaceAll: replaceAll });
     }
 
     merge(nodes, current.children);
