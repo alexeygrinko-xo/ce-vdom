@@ -5,7 +5,6 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "build": "browserify --standalone vdom index.js > dist/vdom.js",
     "test": "mocha"
   },
   "author": "Santiago Ferreira <santiago.ferreira@wyeworks.com>",
@@ -16,7 +15,6 @@
     "mocha": "^2.4.5"
   },
   "dependencies": {
-    "querystring": "^0.2.0",
     "vdom-parser": "CrazyEggInc/vdom-parser",
     "vdom-serialized-patch": "^1.0.3",
     "virtual-dom": "^2.1.1"
