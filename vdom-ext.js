@@ -103,7 +103,7 @@ function removeOneSlash(url) {
 function addProxyUrl(proxyUrl, pageUrl, url) {
   var expandedURL = expandUrl(pageUrl, url);
 
-  return proxyUrl + encodeURIComponent(removeOneSlash(expandedURL));
+  return proxyUrl + removeOneSlash(expandedURL).replace(/\?/, '%3F');
 }
 
 var PROTOCOL_RELATIVE_URL = /^\/\//;

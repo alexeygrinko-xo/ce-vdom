@@ -117,14 +117,14 @@ describe('vdom-ext', function() {
     "img.png"
   ];
   var expandedUrls = [
-    "http%3A%2Ftest.com%2Fimg.jpg",
-    "http%3A%2Ftest.com%2Fimg.jpg%3Fwidth%3D100%26height%3D200",
-    "https%3A%2Ftest.com%2Fimg.jpg",
-    "https%3A%2Ftest.com%2Fimg.jpg%3Fwidth%3D100%26height%3D200",
-    "http%3A%2Ftest.com%2Fimg.jpg",
-    "http%3A%2Ftest.com%2Fimg.jpg%3Fwidth%3D100%26height%3D200",
-    "http%3A%2Ftest.com%2Fimg.jpg",
-    "http%3A%2Ftest.com%2Fimg.png"
+    "http:/test.com/img.jpg",
+    "http:/test.com/img.jpg%3Fwidth=100&height=200",
+    "https:/test.com/img.jpg",
+    "https:/test.com/img.jpg%3Fwidth=100&height=200",
+    "http:/test.com/img.jpg",
+    "http:/test.com/img.jpg%3Fwidth=100&height=200",
+    "http:/test.com/img.jpg",
+    "http:/test.com/img.png"
   ];
 
   describe('#vNodeCleanupUrls()', function() {
@@ -292,12 +292,12 @@ describe('vdom-ext', function() {
                   {
                     t: 3,
                     tn: "IMG",
-                    p: { scrollLeft: 0, src: proxyUrl + "http%3A%2Ftest.com%2F1.png" },
+                    p: { scrollLeft: 0, src: proxyUrl + "http:/test.com/1.png" },
                     c: [
                       {
                         t: 3,
                         tn: "IMG",
-                        p: { scrollLeft: 0, src: proxyUrl + "http%3A%2Ftest.com%2F2.png" }
+                        p: { scrollLeft: 0, src: proxyUrl + "http:/test.com/2.png" }
                       }]}]}]]};
 
         var actual = {
@@ -333,12 +333,12 @@ describe('vdom-ext', function() {
             [
               4,
               {
-                href: proxyUrl + "http%3A%2Ftest.com%2F2.png"
+                href: proxyUrl + "http:/test.com/2.png"
               },
               {
                 p: {
                     async: "",
-                    src: proxyUrl + "http%3A%2Ftest.com%2F1.png",
+                    src: proxyUrl + "http:/test.com/1.png",
                 }
               }]]};
         var actual = {
@@ -373,10 +373,10 @@ describe('vdom-ext', function() {
                 t: 3,
                 tn: "A",
                 p: {
-                  src: proxyUrl + "http%3A%2Ftest.com%2F1.png"
+                  src: proxyUrl + "http:/test.com/1.png"
                 },
                 c: [
-                  { t: 3, tn: "IMG", p: { src: proxyUrl + "http%3A%2Ftest.com%2F2.png" }, c: [] }
+                  { t: 3, tn: "IMG", p: { src: proxyUrl + "http:/test.com/2.png" }, c: [] }
                 ]
               }
             ]
@@ -468,11 +468,11 @@ describe('vdom-ext', function() {
   }
 
   function expectedSerializedPatchRecursive() {
-    var childInsertType = {"t":3,"tn":"IFRAME","p": { "src": proxyUrl + "http%3A%2Ftest.com%2Fchild.png" }};
+    var childInsertType = {"t":3,"tn":"IFRAME","p": { "src": proxyUrl + "http:/test.com/child.png" }};
     var childTextType  =  {"t":1,"x":"Text"};
     var children = [childInsertType, childTextType];
 
-    var insertType = [6, {"t":3,"tn":"IFRAME","c": children,"p": { "src": proxyUrl + "http%3A%2Ftest.com%2Ftest.png" }}];
+    var insertType = [6, {"t":3,"tn":"IFRAME","c": children,"p": { "src": proxyUrl + "http:/test.com/test.png" }}];
 
     return {
       "0": [insertType],
