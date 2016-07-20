@@ -107,10 +107,10 @@ describe('vdom-ext', function() {
 
   var proxyUrl = "https://proxy.com/proxy/";
   var validUrls = [
-    "http://test.com/img.jpg",
+    "hTtP://test.com/img.jpg",
     "http://test.com/img.jpg?width=100&height=200",
     "https://test.com/img.jpg",
-    "https://test.com/img.jpg?width=100&height=200",
+    "HTTPS://test.com/img.jpg?width=100&height=200",
     "//test.com/img.jpg",
     "//test.com/img.jpg?width=100&height=200",
     "/img.jpg",
