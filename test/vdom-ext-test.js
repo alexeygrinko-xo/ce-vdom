@@ -117,14 +117,14 @@ describe('vdom-ext', function() {
     "img.png"
   ];
   var expandedUrls = [
-    "http:/test.com/img.jpg",
-    "http:/test.com/img.jpg%3Fwidth=100&height=200",
-    "https:/test.com/img.jpg",
-    "https:/test.com/img.jpg%3Fwidth=100&height=200",
-    "http:/test.com/img.jpg",
-    "http:/test.com/img.jpg%3Fwidth=100&height=200",
-    "http:/test.com/img.jpg",
-    "http:/test.com/img.png"
+    proxyUrl + "http:/test.com/img.jpg",
+    proxyUrl + "http:/test.com/img.jpg%3Fwidth=100&height=200",
+    "https://test.com/img.jpg",
+    "HTTPS://test.com/img.jpg?width=100&height=200",
+    proxyUrl + "http:/test.com/img.jpg",
+    proxyUrl + "http:/test.com/img.jpg%3Fwidth=100&height=200",
+    proxyUrl + "http:/test.com/img.jpg",
+    proxyUrl + "http:/test.com/img.png"
   ];
 
   describe('#vNodeCleanupUrls()', function() {
@@ -134,7 +134,7 @@ describe('vdom-ext', function() {
           var node = h('img', { src: validUrls[i] });
           var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
 
-          assert.equal(proxyUrl + expandedUrls[i], node.properties.src);
+          assert.equal(expandedUrls[i], node.properties.src);
         }
       });
 
@@ -143,7 +143,7 @@ describe('vdom-ext', function() {
           var node = h('link', { href: validUrls[i] });
           var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
 
-          assert.equal(proxyUrl + expandedUrls[i], node.properties.href);
+          assert.equal(expandedUrls[i], node.properties.href);
         }
       });
 
@@ -204,7 +204,7 @@ describe('vdom-ext', function() {
           var patch = serializedPatch('src', validUrls[i]);
           var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
 
-          assert.deepEqual(actual, serializedPatch('src', proxyUrl + expandedUrls[i]));
+          assert.deepEqual(actual, serializedPatch('src', expandedUrls[i]));
         }
       });
 
@@ -213,7 +213,7 @@ describe('vdom-ext', function() {
           var patch = serializedPatch('href', validUrls[i]);
           var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
 
-          assert.deepEqual(actual, serializedPatch('href', proxyUrl + expandedUrls[i]));
+          assert.deepEqual(actual, serializedPatch('href', expandedUrls[i]));
         }
       });
 
