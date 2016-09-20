@@ -119,8 +119,8 @@ describe('vdom-ext', function() {
   var expandedUrls = [
     proxyUrl + "http:/test.com/img.jpg",
     proxyUrl + "http:/test.com/img.jpg%3Fwidth=100&height=200",
-    "https://test.com/img.jpg",
-    "HTTPS://test.com/img.jpg?width=100&height=200",
+    proxyUrl + "https://test.com/img.jpg",
+    proxyUrl + "https://test.com/img.jpg%3Fwidth=100&height=200",
     proxyUrl + "http:/test.com/img.jpg",
     proxyUrl + "http:/test.com/img.jpg%3Fwidth=100&height=200",
     proxyUrl + "http:/test.com/img.jpg",
