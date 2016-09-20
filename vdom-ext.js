@@ -15,6 +15,7 @@ function merge(target, other) {
 
 function findNodeOfType(root, tagName) {
   var nodes = [root];
+  var current;
 
   while(current = nodes.shift()) {
     if (isVNode(current)) {
@@ -164,7 +165,7 @@ function appendBaseElement(root, href) {
  */
 function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
   var nodes = [root];
-  var urlProperties = ['src', 'href'];
+  var current;
 
   while(current = nodes.shift()) {
     if (isVNode(current)) {
