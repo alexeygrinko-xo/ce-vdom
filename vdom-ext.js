@@ -60,7 +60,7 @@ function processNodeProperties(nodeProperties, options) {
 
     if (notExpectedProtocol(propValue)) {
       nodeProperties[property] = TRANSPARENT_GIF_DATA;
-    } else if (options.replaceAll) {
+    } else {
       nodeProperties[property] = addProxyUrl(options.proxyUrl, options.baseUrl, propValue);;
     }
   });
@@ -163,13 +163,13 @@ function appendBaseElement(root, href) {
  * @param {String} - base URL
  * @return {VNode}
  */
-function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
+function vNodeCleanupUrls(root, proxyUrl, baseUrl) {
   var nodes = [root];
   var current;
 
   while(current = nodes.shift()) {
     if (isVNode(current)) {
-      processNodeProperties(current.properties, { proxyUrl: proxyUrl, baseUrl: baseUrl, replaceAll: replaceAll });
+      processNodeProperties(current.properties, { proxyUrl: proxyUrl, baseUrl: baseUrl });
     }
 
     merge(nodes, current.children);
@@ -181,15 +181,14 @@ function vNodeCleanupUrls(replaceAll, root, proxyUrl, baseUrl) {
 /**
  * Change src from all patches with a src with an unexpected protocol
  *
- * @param {Boolean} - TRUE to modify "src" and "href" attributes
  * @param {SerializedPatch}
  * @param {String} - proxy URL
  * @param {String} - base URL
  * @return {SerializedPatch}
  */
-function patchCleanupUrls(replaceAll, patches, proxyUrl, baseUrl) {
+function patchCleanupUrls(patches, proxyUrl, baseUrl) {
   patchIndices(patches).forEach(function(index) {
-    changePatch(patches[index], { proxyUrl: proxyUrl, baseUrl: baseUrl, replaceAll: replaceAll });
+    changePatch(patches[index], { proxyUrl: proxyUrl, baseUrl: baseUrl });
   });
 
   return patches;

@@ -128,307 +128,261 @@ describe('vdom-ext', function() {
   ];
 
   describe('#vNodeCleanupUrls()', function() {
-    describe('when replace all is true', function() {
-      it('replaces all src adding the proxy url and passing the src value expanded', function() {
-        for (var i = 0; i < validUrls.length; i++) {
-          var node = h('img', { src: validUrls[i] });
-          var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
+    it('replaces all src adding the proxy url and passing the src value expanded', function() {
+      for (var i = 0; i < validUrls.length; i++) {
+        var node = h('img', { src: validUrls[i] });
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
 
-          assert.equal(expandedUrls[i], node.properties.src);
-        }
-      });
-
-      it('replaces all href adding the proxy url and passing the href value expanded', function() {
-        for (var i = 0; i < validUrls.length; i++) {
-          var node = h('link', { href: validUrls[i] });
-          var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
-
-          assert.equal(expandedUrls[i], node.properties.href);
-        }
-      });
-
-      it('replaces src that starts with unexpected protocol with an empty gif', function() {
-        for (var i = 0; i < unexpectedProtocols.length; i++) {
-          var protocol = unexpectedProtocols[i];
-          var node = h('img', { src: protocol + '://test' });
-          var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
-
-          assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.src);
-        }
-      });
-
-      it('replaces href that starts with unexpected protocol with an empty gif', function() {
-        for (var i = 0; i < unexpectedProtocols.length; i++) {
-          var protocol = unexpectedProtocols[i];
-          var node = h('img', { href: protocol + '://test' });
-          var actual = vNodeCleanupUrls(true, node, proxyUrl, 'http://test.com/');
-
-          assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.href);
-        }
-      });
+        assert.equal(expandedUrls[i], node.properties.src);
+      }
     });
 
-    describe('when replace all is false', function() {
-      it('does not replace src that not start with unexpected protocol', function() {
-        for (var i = 0; i < validUrls.length; i++) {
-          var node = h('img', { src: validUrls[i] });
-          var actual = vNodeCleanupUrls(false, node, proxyUrl, 'http://test.com/');
+    it('replaces all href adding the proxy url and passing the href value expanded', function() {
+      for (var i = 0; i < validUrls.length; i++) {
+        var node = h('link', { href: validUrls[i] });
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
 
-          assert.equal(validUrls[i], node.properties.src);
-        }
-      });
+        assert.equal(expandedUrls[i], node.properties.href);
+      }
+    });
 
-      it('replaces src that starts with unexpected protocol with an empty gif', function() {
-        for (var i = 0; i < unexpectedProtocols.length; i++) {
-          var protocol = unexpectedProtocols[i];
-          var node = h('img', { src: protocol + '://test' });
-          var actual = vNodeCleanupUrls(false, node, proxyUrl, 'http://test.com/');
+    it('replaces src that starts with unexpected protocol with an empty gif', function() {
+      for (var i = 0; i < unexpectedProtocols.length; i++) {
+        var protocol = unexpectedProtocols[i];
+        var node = h('img', { src: protocol + '://test' });
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
 
-          assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.src);
-        }
-      });
+        assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.src);
+      }
+    });
+
+    it('replaces href that starts with unexpected protocol with an empty gif', function() {
+      for (var i = 0; i < unexpectedProtocols.length; i++) {
+        var protocol = unexpectedProtocols[i];
+        var node = h('img', { href: protocol + '://test' });
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
+
+        assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.href);
+      }
     });
   });
 
   describe('#patchCleanupUrls()', function() {
-    describe('when replace all is true', function() {
-      it('processes all patches child nodes', function() {
-        var patch = serializedPatchRecursive();
-        var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
+    it('processes all patches child nodes', function() {
+      var patch = serializedPatchRecursive();
+      var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
 
-        assert.deepEqual(actual, expectedSerializedPatchRecursive());
-      });
-
-      it('replaces all src adding the proxy url and passing the src value expanded', function() {
-        for (var i = 0; i < validUrls.length; i++) {
-          var patch = serializedPatch('src', validUrls[i]);
-          var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
-
-          assert.deepEqual(actual, serializedPatch('src', expandedUrls[i]));
-        }
-      });
-
-      it('replaces all href adding the proxy url and passing the src value expanded', function() {
-        for (var i = 0; i < validUrls.length; i++) {
-          var patch = serializedPatch('href', validUrls[i]);
-          var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
-
-          assert.deepEqual(actual, serializedPatch('href', expandedUrls[i]));
-        }
-      });
-
-      it('replaces src that starts with unexpected protocol with an empty gif', function() {
-        for (var i = 0; i < unexpectedProtocols.length; i++) {
-          var protocol = unexpectedProtocols[i];
-          var patch = serializedPatch('src', protocol + '://test');
-          var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
-
-          assert.deepEqual(actual, serializedPatch('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
-        }
-      });
-
-      it('replaces href that starts with unexpected protocol with an empty gif', function() {
-        for (var i = 0; i < unexpectedProtocols.length; i++) {
-          var protocol = unexpectedProtocols[i];
-          var patch = serializedPatch('href', protocol + '://test');
-          var actual = patchCleanupUrls(true, patch, proxyUrl, 'http://test.com/');
-
-          assert.deepEqual(actual, serializedPatch('href', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
-        }
-      });
+      assert.deepEqual(actual, expectedSerializedPatchRecursive());
     });
 
-    describe('when replace all is false', function() {
-      it('does not replace src that not start with unexpected protocol', function() {
-        for (var i = 0; i < validUrls.length; i++) {
-          var patch = serializedPatch('src', validUrls[i]);
-          var actual = patchCleanupUrls(false, patch, proxyUrl, 'http://test.com/');
+    it('replaces all src adding the proxy url and passing the src value expanded', function() {
+      for (var i = 0; i < validUrls.length; i++) {
+        var patch = serializedPatch('src', validUrls[i]);
+        var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
 
-          assert.deepEqual(actual, serializedPatch('src', validUrls[i]));
-        }
-      });
+        assert.deepEqual(actual, serializedPatch('src', expandedUrls[i]));
+      }
+    });
 
-      it('replaces src that starts with unexpected protocol with an empty gif', function() {
-        for (var i = 0; i < unexpectedProtocols.length; i++) {
-          var protocol = unexpectedProtocols[i];
-          var patch = serializedPatch('src', protocol + '://test');
-          var actual = patchCleanupUrls(false, patch, proxyUrl, 'http://test.com/');
+    it('replaces all href adding the proxy url and passing the src value expanded', function() {
+      for (var i = 0; i < validUrls.length; i++) {
+        var patch = serializedPatch('href', validUrls[i]);
+        var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
 
-          assert.deepEqual(actual, serializedPatch('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
-        }
-      });
+        assert.deepEqual(actual, serializedPatch('href', expandedUrls[i]));
+      }
+    });
 
-      it('processes a VirtualPatch.VTEXT', function() {
-        // Change text of a VText
-        //  * VirtualPatch.VTEXT == 1
-        //  * type(VText) == 1
-        var expected = {
-          "77": [
-            [ 1, { t: 1, x: "/1.png" } ]
-          ]};
-        var actual = {
-          "77": [
-            [ 1, { t: 1, x: "/1.png" } ]
-          ]};
+    it('replaces src that starts with unexpected protocol with an empty gif', function() {
+      for (var i = 0; i < unexpectedProtocols.length; i++) {
+        var protocol = unexpectedProtocols[i];
+        var patch = serializedPatch('src', protocol + '://test');
+        var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
 
-        patchCleanupUrls(true, actual, proxyUrl, 'http://test.com/');
+        assert.deepEqual(actual, serializedPatch('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
+      }
+    });
 
-        assert.deepEqual(actual, expected);
-      });
+    it('replaces href that starts with unexpected protocol with an empty gif', function() {
+      for (var i = 0; i < unexpectedProtocols.length; i++) {
+        var protocol = unexpectedProtocols[i];
+        var patch = serializedPatch('href', protocol + '://test');
+        var actual = patchCleanupUrls(patch, proxyUrl, 'http://test.com/');
 
-      it('processes a VirtualPatch.VNODE', function() {
-        // Change a VNode
-        //  * VirtualPatch.VNODE == 2
-        //  * type(VNode) == 3
-        var expected = {
-          "92": [
-            [
-              2,
-              {
-                t: 3,
-                tn: "DIV",
-                p: { className: "content" },
-                c: [
-                  {
-                    t: 3,
-                    tn: "IMG",
-                    p: { scrollLeft: 0, src: proxyUrl + "http:/test.com/1.png" },
-                    c: [
-                      {
-                        t: 3,
-                        tn: "IMG",
-                        p: { scrollLeft: 0, src: proxyUrl + "http:/test.com/2.png" }
-                      }]}]}]]};
+        assert.deepEqual(actual, serializedPatch('href', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP'));
+      }
+    });
 
-        var actual = {
-          "92": [
-            [
-              2,
-              {
-                t: 3,
-                tn: "DIV",
-                p: { className: "content" },
-                c: [
-                  {
-                    t: 3,
-                    tn: "IMG",
-                    p: { scrollLeft: 0, src: "/1.png" },
-                    c: [
-                      {
-                        t: 3,
-                        tn: "IMG",
-                        p: { scrollLeft: 0, src: "/2.png" }
-                      }]}]}]]};
+    it('processes a VirtualPatch.VTEXT', function() {
+      // Change text of a VText
+      //  * VirtualPatch.VTEXT == 1
+      //  * type(VText) == 1
+      var expected = {
+        "77": [
+          [ 1, { t: 1, x: "/1.png" } ]
+        ]};
+      var actual = {
+        "77": [
+          [ 1, { t: 1, x: "/1.png" } ]
+        ]};
 
-        patchCleanupUrls(true, actual, proxyUrl, 'http://test.com/');
+      patchCleanupUrls(actual, proxyUrl, 'http://test.com/');
 
-        assert.deepEqual(actual, expected);
-      });
+      assert.deepEqual(actual, expected);
+    });
 
-      it('processes a VirtualPatch.PROPS', function() {
-        // Change a VNode
-        //  * VirtualPatch.PROPS == 4
-        var expected = {
-          "107": [
-            [
-              4,
-              {
-                href: proxyUrl + "http:/test.com/2.png"
-              },
-              {
-                p: {
-                    async: "",
-                    src: proxyUrl + "http:/test.com/1.png",
-                }
-              }]]};
-        var actual = {
-          "107": [
-            [
-              4,
-              {
-                href: "/2.png"
-              },
-              {
-                p: {
-                    async: "",
-                    src: "/1.png",
-                }
-              }]]};
+    it('processes a VirtualPatch.VNODE', function() {
+      // Change a VNode
+      //  * VirtualPatch.VNODE == 2
+      //  * type(VNode) == 3
+      var expected = {
+        "92": [
+          [
+            2,
+            {
+              t: 3,
+              tn: "DIV",
+              p: { className: "content" },
+              c: [
+                {
+                  t: 3,
+                  tn: "IMG",
+                  p: { scrollLeft: 0, src: proxyUrl + "http:/test.com/1.png" },
+                  c: [
+                    {
+                      t: 3,
+                      tn: "IMG",
+                      p: { scrollLeft: 0, src: proxyUrl + "http:/test.com/2.png" }
+                    }]}]}]]};
 
-        patchCleanupUrls(true, actual, proxyUrl, 'http://test.com/');
+      var actual = {
+        "92": [
+          [
+            2,
+            {
+              t: 3,
+              tn: "DIV",
+              p: { className: "content" },
+              c: [
+                {
+                  t: 3,
+                  tn: "IMG",
+                  p: { scrollLeft: 0, src: "/1.png" },
+                  c: [
+                    {
+                      t: 3,
+                      tn: "IMG",
+                      p: { scrollLeft: 0, src: "/2.png" }
+                    }]}]}]]};
 
-        assert.deepEqual(actual, expected);
-      });
+      patchCleanupUrls(actual, proxyUrl, 'http://test.com/');
 
-      it('processes a VirtualPatch.INSERT', function() {
-        // Change a VNode
-        //  * VirtualPatch.INSERT == 6
-        //  * type(VText) == 1
-        //  * type(VNode) == 3
-        var expected = {
-          "309": [
-            [ 6, { t: 1, x: "lorem ipsum" }], // insert text node
-            [
-              6, {
-                t: 3,
-                tn: "A",
-                p: {
-                  src: proxyUrl + "http:/test.com/1.png"
-                },
-                c: [
-                  { t: 3, tn: "IMG", p: { src: proxyUrl + "http:/test.com/2.png" }, c: [] }
-                ]
+      assert.deepEqual(actual, expected);
+    });
+
+    it('processes a VirtualPatch.PROPS', function() {
+      // Change a VNode
+      //  * VirtualPatch.PROPS == 4
+      var expected = {
+        "107": [
+          [
+            4,
+            {
+              href: proxyUrl + "http:/test.com/2.png"
+            },
+            {
+              p: {
+                async: "",
+                src: proxyUrl + "http:/test.com/1.png",
               }
-            ]
-          ]
-        };
-        var actual = {
-          "309": [
-            [ 6, { t: 1, x: "lorem ipsum" }], // insert text node
-            [
-              6, {
-                t: 3,
-                tn: "A",
-                p: {
-                  src: "/1.png"
-                },
-                c: [
-                  { t: 3, tn: "IMG", p: { src: "/2.png" }, c: [] }
-                ]
+            }]]};
+      var actual = {
+        "107": [
+          [
+            4,
+            {
+              href: "/2.png"
+            },
+            {
+              p: {
+                async: "",
+                src: "/1.png",
               }
+            }]]};
+
+      patchCleanupUrls(actual, proxyUrl, 'http://test.com/');
+
+      assert.deepEqual(actual, expected);
+    });
+
+    it('processes a VirtualPatch.INSERT', function() {
+      // Change a VNode
+      //  * VirtualPatch.INSERT == 6
+      //  * type(VText) == 1
+      //  * type(VNode) == 3
+      var expected = {
+        "309": [
+          [ 6, { t: 1, x: "lorem ipsum" }], // insert text node
+          [
+            6, {
+            t: 3,
+            tn: "A",
+            p: {
+              src: proxyUrl + "http:/test.com/1.png"
+            },
+            c: [
+              { t: 3, tn: "IMG", p: { src: proxyUrl + "http:/test.com/2.png" }, c: [] }
             ]
+          }
           ]
-        };
-
-        patchCleanupUrls(true, actual, proxyUrl, 'http://test.com/');
-
-        assert.deepEqual(actual, expected);
-      });
-
-      it('processes a VirtualPatch.REMOVE', function() {
-        // Change a VNode
-        //  * VirtualPatch.REMOVE == 7
-        var expected = {
-          "4": [
-            [
-              7,
-              null
+        ]
+      };
+      var actual = {
+        "309": [
+          [ 6, { t: 1, x: "lorem ipsum" }], // insert text node
+          [
+            6, {
+            t: 3,
+            tn: "A",
+            p: {
+              src: "/1.png"
+            },
+            c: [
+              { t: 3, tn: "IMG", p: { src: "/2.png" }, c: [] }
             ]
+          }
           ]
-        };
-        var actual = {
-          "4": [
-            [
-              7,
-              null
-            ]
+        ]
+      };
+
+      patchCleanupUrls(actual, proxyUrl, 'http://test.com/');
+
+      assert.deepEqual(actual, expected);
+    });
+
+    it('processes a VirtualPatch.REMOVE', function() {
+      // Change a VNode
+      //  * VirtualPatch.REMOVE == 7
+      var expected = {
+        "4": [
+          [
+            7,
+            null
           ]
-        };
+        ]
+      };
+      var actual = {
+        "4": [
+          [
+            7,
+            null
+          ]
+        ]
+      };
 
-        patchCleanupUrls(true, actual, proxyUrl, 'http://test.com/');
+      patchCleanupUrls(actual, proxyUrl, 'http://test.com/');
 
-        assert.deepEqual(actual, expected);
-      });
+      assert.deepEqual(actual, expected);
     });
   });
 
