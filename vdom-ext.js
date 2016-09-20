@@ -60,7 +60,7 @@ function processNodeProperties(nodeProperties, options) {
 
     if (notExpectedProtocol(propValue)) {
       nodeProperties[property] = TRANSPARENT_GIF_DATA;
-    } else if (options.replaceAll && ! /^https:\/\//i.test(propValue)) {
+    } else if (options.replaceAll) {
       nodeProperties[property] = addProxyUrl(options.proxyUrl, options.baseUrl, propValue);;
     }
   });
