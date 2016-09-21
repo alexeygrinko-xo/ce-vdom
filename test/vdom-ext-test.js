@@ -4,7 +4,6 @@ var h = require('virtual-dom/h');
 // Module under test (MUT)
 var MUT = require('../vdom-ext');
 var findBaseNode = MUT.findBaseNode;
-var appendBaseElement = MUT.appendBaseElement;
 var vNodeCleanupUrls = MUT.vNodeCleanupUrls;
 var patchCleanupUrls = MUT.patchCleanupUrls;
 
@@ -52,54 +51,6 @@ describe('vdom-ext', function() {
 
       assert.equal(relativeBaseElement, findBaseNode(treeWithRelativeBaseElement));
       assert.isNotOk(findBaseNode(treeWithoutBaseElement));
-    });
-  });
-
-  describe('#appendBaseElement()', function() {
-    it('appends base element', function() {
-      var tree = createTree();
-      var actual = appendBaseElement(createTree(), 'http://example.com');
-
-      assertEqualVNode(createBaseElement('http://example.com'), findBaseNode(actual));
-    });
-
-    it('updates relative base element from attribute', function() {
-      var tree = createTree(createBaseElement('/relative'));
-      var actual = appendBaseElement(tree, 'http://example.com');
-
-      assertEqualVNode(createBaseElement('http://example.com/relative'), findBaseNode(actual));
-    });
-
-    it('updates relative base element from property', function() {
-      var tree = createTree(createBaseElement('/relative', true));
-      var actual = appendBaseElement(tree, 'http://example.com');
-
-      assertEqualVNode(createBaseElement('http://example.com/relative'), findBaseNode(actual));
-    });
-
-    it('takes care of dashes when concatenating relative base element', function() {
-      var tree = createTree(createBaseElement('/relative'));
-      var actual = appendBaseElement(tree, 'http://example.com/');
-
-      assertEqualVNode(createBaseElement('http://example.com/relative'), findBaseNode(actual));
-    });
-
-    it("doesn't update absolute base element", function() {
-      var absoluteBaseElement = createBaseElement('http://crazyegg.com/');
-      var tree = createTree(absoluteBaseElement);
-
-      var actual = appendBaseElement(tree, 'http://example.com');
-
-      assert.equal('http://crazyegg.com/', findBaseNode(actual).properties.attributes.href);
-    });
-
-    it("doesn't update protocol relative base element", function() {
-      var protocolRelativeBaseElement = createBaseElement('//crazyegg.com/');
-      var tree = createTree(protocolRelativeBaseElement);
-
-      var actual = appendBaseElement(tree, 'http://example.com');
-
-      assert.equal('//crazyegg.com/', findBaseNode(actual).properties.attributes.href);
     });
   });
 
