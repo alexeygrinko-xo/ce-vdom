@@ -28,10 +28,6 @@ function findNodeOfType(root, tagName) {
   }
 }
 
-function findBaseNode(root) {
-  return findNodeOfType(root, 'BASE');
-}
-
 function patchIndices(patches) {
   var indices = [];
 
@@ -114,6 +110,36 @@ var EXPECTED_PROTOCOL = /^(https?|data):\/\//i;
 var TRANSPARENT_GIF_DATA = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP';
 
 /**
+ * Get base URL for all resources on the page concerning BASE element if it persists.
+ * If there's no BASE element, return host URL without changes;
+ * if BASE element's URL is absolute, use it instead of host;
+ * if it's relative, make it absolute by concatenating with host URL.
+ * @param {VNode} root - root node
+ * @param {String} host - base's href URL to append
+ * @returns {String}
+ */
+function getBaseUrl(root, host) {
+  var base = findNodeOfType(root, 'BASE');
+  var baseUrl = host;
+
+  if (base) {
+    baseUrl = base.properties.href || base.properties.attributes && base.properties.attributes.href || '';
+
+    if (!PROTOCOL_RELATIVE_URL.test(baseUrl.toLowerCase()) && !ABSOLUTE_URL.test(baseUrl.toLowerCase())) {
+
+      if (/\/$/.test(host) && /^\//.test(baseUrl)) {
+        // remove extra slash if host ends with one and baseUrl starts with one
+        baseUrl = baseUrl.slice(1);
+      }
+
+      baseUrl = host + baseUrl;
+    }
+  }
+
+  return baseUrl;
+}
+
+/**
  * Change src from all node with a src with an unexpected protocol
  *
  * @param {VNode}
@@ -153,7 +179,7 @@ function patchCleanupUrls(patches, proxyUrl, baseUrl) {
 }
 
 module.exports = {
-  findBaseNode: findBaseNode,
+  getBaseUrl: getBaseUrl,
   vNodeCleanupUrls: vNodeCleanupUrls,
   patchCleanupUrls: patchCleanupUrls
 };

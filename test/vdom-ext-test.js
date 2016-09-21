@@ -3,7 +3,7 @@ var h = require('virtual-dom/h');
 
 // Module under test (MUT)
 var MUT = require('../vdom-ext');
-var findBaseNode = MUT.findBaseNode;
+var getBaseUrl = MUT.getBaseUrl;
 var vNodeCleanupUrls = MUT.vNodeCleanupUrls;
 var patchCleanupUrls = MUT.patchCleanupUrls;
 
@@ -43,17 +43,6 @@ function assertEqualVNode(a, b) {
 }
 
 describe('vdom-ext', function() {
-  describe('#findBaseNode()', function() {
-    it('returns base node if exists', function() {
-      var treeWithoutBaseElement = createTree();
-      var relativeBaseElement = createBaseElement('/relative');
-      var treeWithRelativeBaseElement = createTree(relativeBaseElement);
-
-      assert.equal(relativeBaseElement, findBaseNode(treeWithRelativeBaseElement));
-      assert.isNotOk(findBaseNode(treeWithoutBaseElement));
-    });
-  });
-
   var unexpectedProtocols = ["chrome-extension", "ftp", "javascript", "test"];
 
   var proxyUrl = "https://proxy.com/proxy/";
@@ -77,6 +66,56 @@ describe('vdom-ext', function() {
     proxyUrl + "http:/test.com/img.jpg",
     proxyUrl + "http:/test.com/img.png"
   ];
+
+  describe('#getBaseUrl()', function() {
+    it('returns host unchanged if there is no BASE element', function() {
+      var host = "http://test.com/12345";
+      var tree = createTree();
+      var baseUrl = getBaseUrl(tree, host);
+
+      assert.equal(baseUrl, host);
+    });
+
+    it('returns BASE element\'s URL if it\'s absolute (and set as elemetn\'s property)', function() {
+      var host = "http://test.com/0";
+      var initialBaseUrl = "https://initial.base.url";
+      var base = createBaseElement(initialBaseUrl, true);
+      var tree = createTree(base);
+      var baseUrl = getBaseUrl(tree, host);
+
+      assert.equal(baseUrl, initialBaseUrl);
+    });
+
+    it('returns BASE element\'s URL if it\'s protocol-relative (and set as elemetn\'s attribute)', function() {
+      var host = "http://test.com/1";
+      var initialBaseUrl = "https://initial.base.url/1/2/3";
+      var base = createBaseElement(initialBaseUrl);
+      var tree = createTree(base);
+      var baseUrl = getBaseUrl(tree, host);
+
+      assert.equal(baseUrl, initialBaseUrl);
+    });
+
+    it('returns concatenated URL if BASE element\'s URL is relative', function() {
+      var host = "http://test.com/";
+      var initialBaseUrl = "initial-base-url/1/2/3";
+      var base = createBaseElement(initialBaseUrl);
+      var tree = createTree(base);
+      var baseUrl = getBaseUrl(tree, host);
+
+      assert.equal(baseUrl, host + initialBaseUrl);
+    });
+
+    it('returns concatenated URL if BASE element\'s URL is relative; removes extra slash', function() {
+      var host = "http://t2.test.com/";
+      var initialBaseUrl = "initial-base-url/4/5/6";
+      var base = createBaseElement('/' + initialBaseUrl);
+      var tree = createTree(base);
+      var baseUrl = getBaseUrl(tree, host);
+
+      assert.equal(baseUrl, host + initialBaseUrl);
+    });
+  });
 
   describe('#vNodeCleanupUrls()', function() {
     it('replaces all src adding the proxy url and passing the src value expanded', function() {
