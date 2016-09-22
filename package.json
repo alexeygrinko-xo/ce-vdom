@@ -17,6 +17,6 @@
   "dependencies": {
     "vdom-parser": "CrazyEggInc/vdom-parser",
     "vdom-serialized-patch": "CrazyEggInc/vdom-serialized-patch",
-    "virtual-dom": "^2.1.1"
+    "virtual-dom": "CrazyEggInc/virtual-dom"
   }
 }
