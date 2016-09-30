@@ -4,6 +4,7 @@ var vdomCreate = require('virtual-dom/create-element');
 var serialize = require('vdom-serialized-patch/serialize');
 var vdomPatch = require('vdom-serialized-patch/patch');
 var getBaseUrl = require('./vdom-ext').getBaseUrl;
+var findNodeOfType = require('./vdom-ext').findNodeOfType;
 var vNodeCleanupUrls = require('./vdom-ext').vNodeCleanupUrls;
 var patchCleanupUrls = require('./vdom-ext').patchCleanupUrls;
 
@@ -100,8 +101,10 @@ module.exports = {
   parse: parse,
   diff: diff,
   patch: patch,
+  serialize: serialize,
   createElement: vdomCreate,
   getBaseUrl: getBaseUrl,
+  findNodeOfType: findNodeOfType,
   vNodeCleanupUrls: vNodeCleanupUrls,
   patchCleanupUrls: patchCleanupUrls
 };

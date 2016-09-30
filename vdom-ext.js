@@ -181,5 +181,6 @@ function patchCleanupUrls(patches, proxyUrl, baseUrl) {
 module.exports = {
   getBaseUrl: getBaseUrl,
   vNodeCleanupUrls: vNodeCleanupUrls,
-  patchCleanupUrls: patchCleanupUrls
+  patchCleanupUrls: patchCleanupUrls,
+  findNodeOfType: findNodeOfType
 };
