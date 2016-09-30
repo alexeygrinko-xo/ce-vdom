@@ -178,9 +178,48 @@ function patchCleanupUrls(patches, proxyUrl, baseUrl) {
   return patches;
 }
 
+/**
+ * Get unique index of node in virtual tree (used in diffs&patches).
+ * Example of nodes indexing:
+ *
+ *                      Root (0)
+ *  Head (1)             TextNode (13)          Body (14)
+ *  HeadNodes (2-12)                        Div (15)            AnotherDiv (21)
+ *                                          DivNodes (16-20)    ...
+ *
+ * Thus, to get index of a node we have to traverse the tree using depth-first search,
+ * incrementing index (initialized with 0) with each visited node.
+ *
+ * @param {VNode} tree - root node of the virtual tree
+ * @param {VNode} node
+ * @returns {number}
+ */
+function getNodeIndex(tree, node) {
+    var index = 0;
+    var match = false;
+
+    tree = tree instanceof Array ? tree : [tree];
+
+    (function recurse(tree) {
+      for (var i = 0; i < tree.length && !match; i++, index++) {
+        if (tree[i] == node) {
+          match = true;
+          return;
+        }
+
+        if (tree[i].children) {
+          recurse(tree[i].children);
+        }
+      }
+    })(tree);
+
+    return match ? index : -1;
+}
+
 module.exports = {
   getBaseUrl: getBaseUrl,
   vNodeCleanupUrls: vNodeCleanupUrls,
   patchCleanupUrls: patchCleanupUrls,
-  findNodeOfType: findNodeOfType
+  findNodeOfType: findNodeOfType,
+  getNodeIndex: getNodeIndex
 };

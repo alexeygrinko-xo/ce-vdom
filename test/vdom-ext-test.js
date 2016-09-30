@@ -6,6 +6,7 @@ var MUT = require('../vdom-ext');
 var getBaseUrl = MUT.getBaseUrl;
 var vNodeCleanupUrls = MUT.vNodeCleanupUrls;
 var patchCleanupUrls = MUT.patchCleanupUrls;
+var getNodeIndex = MUT.getNodeIndex;
 
 function createBaseElement(href, asProperty) {
   var props = { };
@@ -66,6 +67,38 @@ describe('vdom-ext', function() {
     proxyUrl + "http:/test.com/img.jpg",
     proxyUrl + "http:/test.com/img.png"
   ];
+
+  describe('#getNodeIndex()', function() {
+    var tree = createTree();
+
+    it('returns 0 for HTML element', function() {
+      assert.equal(getNodeIndex(tree, tree), 0);
+    });
+
+    it('returns 1 for HEAD element', function() {
+      assert.equal(getNodeIndex(tree, tree.children[0]), 1);
+    });
+
+    it('returns 2 for first child of head', function() {
+      assert.equal(getNodeIndex(tree, tree.children[0].children[0]), 2);
+    });
+
+    it('returns 5 for last child of head', function() {
+      assert.equal(getNodeIndex(tree, tree.children[0].children[2]), 5);
+    });
+
+    it('returns 6 for BODY element', function() {
+      assert.equal(getNodeIndex(tree, tree.children[1]), 6);
+    });
+
+    it('returns 7 for H1 element', function() {
+      assert.equal(getNodeIndex(tree, tree.children[1].children[0]), 7);
+    });
+
+    it('returns -1 for non-existent element', function() {
+      assert.equal(getNodeIndex(tree, {}), -1);
+    });
+  });
 
   describe('#getBaseUrl()', function() {
     it('returns host unchanged if there is no BASE element', function() {

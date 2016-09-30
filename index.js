@@ -101,7 +101,6 @@ module.exports = {
   parse: parse,
   diff: diff,
   patch: patch,
-  serialize: serialize,
   createElement: vdomCreate,
   getBaseUrl: getBaseUrl,
   findNodeOfType: findNodeOfType,
