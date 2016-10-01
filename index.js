@@ -6,6 +6,8 @@ var vdomPatch = require('vdom-serialized-patch/patch');
 var getBaseUrl = require('./vdom-ext').getBaseUrl;
 var findNodeOfType = require('./vdom-ext').findNodeOfType;
 var getNodeIndex = require('./vdom-ext').getNodeIndex;
+var getNodeByIndex = require('./vdom-ext').getNodeByIndex;
+var depthFirstSearch = require('./vdom-ext').depthFirstSearch;
 var vNodeCleanupUrls = require('./vdom-ext').vNodeCleanupUrls;
 var patchCleanupUrls = require('./vdom-ext').patchCleanupUrls;
 
@@ -72,40 +74,47 @@ function parse(el, options) {
  *
  * @param {string} before - Before state
  * @param {string} after - After state
+ * @param {Object} [options] - options.preserveVdom: boolean - whether to preserve virtual-dom with the patch or delete it
  * @return {object} CE flavored virtual-dom/diff
  */
-function diff(before, after) {
+function diff(before, after, options) {
   var d = serialize(vdomDiff(before, after));
+  options = options || {};
 
-  // we don't want to store the virtual-dom with the patch
-  delete d.a;
+  if (!options.preserveVdom) {
+    // we don't want to store the virtual-dom with the patch
+    delete d.a;
+  }
 
   return d;
 }
 
 /**
- * Applies a diff on a real DOM
+ * Serializes patch so that it contains a virtual dom tree bound to it
  *
- * @param {string} originalDOM - HTML string of the DOM to work with
- * @param {HTMLElement} rootNode - Where to apply the patch in the DOM
+ * @param {string} originalDOM - DOM to work with
  * @param {object} patches - CE flavored virtual-dom/diff
  */
-function patch(originalDOM, rootNode, patches, options) {
-  // assume diff doesn't bring the `.a` virtual-dom instance
-  var vtree = parse(originalDOM);
-  patches.a = serialize(vdomDiff(vtree,vtree)).a;
+function preparePatch(originalDOM, patches) {
+  if (!patches.a) {
+    var vtree = parse(originalDOM);
+    patches.a = serialize(vdomDiff(vtree, vtree)).a;
+  }
 
-  vdomPatch(rootNode, patches, options);
+  return patches;
 }
 
 module.exports = {
   parse: parse,
   diff: diff,
-  patch: patch,
+  preparePatch: preparePatch,
+  patch: vdomPatch,
   createElement: vdomCreate,
   getBaseUrl: getBaseUrl,
   findNodeOfType: findNodeOfType,
   getNodeIndex: getNodeIndex,
+  getNodeByIndex: getNodeByIndex,
+  depthFirstSearch: depthFirstSearch,
   vNodeCleanupUrls: vNodeCleanupUrls,
   patchCleanupUrls: patchCleanupUrls
 };

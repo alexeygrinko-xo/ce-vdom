@@ -7,6 +7,8 @@ var getBaseUrl = MUT.getBaseUrl;
 var vNodeCleanupUrls = MUT.vNodeCleanupUrls;
 var patchCleanupUrls = MUT.patchCleanupUrls;
 var getNodeIndex = MUT.getNodeIndex;
+var getNodeByIndex = MUT.getNodeByIndex;
+var processInlineCSS = MUT.processInlineCSS;
 
 function createBaseElement(href, asProperty) {
   var props = { };
@@ -100,6 +102,38 @@ describe('vdom-ext', function() {
     });
   });
 
+  describe('#getNodeByIndex()', function() {
+    var tree = createTree();
+
+    it('returns HTML element for 0', function() {
+      assert.equal(getNodeByIndex(tree, 0), tree);
+    });
+
+    it('returns HEAD element for 1', function() {
+      assert.equal(getNodeByIndex(tree, 1), tree.children[0]);
+    });
+
+    it('returns first child of head for 2', function() {
+      assert.equal(getNodeByIndex(tree, 2), tree.children[0].children[0]);
+    });
+
+    it('returns last child of head for 5', function() {
+      assert.equal(getNodeByIndex(tree, 5), tree.children[0].children[2]);
+    });
+
+    it('returns BODY element for 6', function() {
+      assert.equal(getNodeByIndex(tree, 6), tree.children[1]);
+    });
+
+    it('returns H1 element for 7', function() {
+      assert.equal(getNodeByIndex(tree, 7), tree.children[1].children[0]);
+    });
+
+    it('returns null for 10', function() {
+      assert.equal(getNodeByIndex(tree, 10), null);
+    });
+  });
+
   describe('#getBaseUrl()', function() {
     it('returns host unchanged if there is no BASE element', function() {
       var host = "http://test.com/12345";
@@ -150,6 +184,37 @@ describe('vdom-ext', function() {
     });
   });
 
+  describe('#processInlineCSS()', function() {
+    it('returns CSS unchanged when no url was found', function() {
+      var txt = 'simple text';
+      var style = h('style', [txt]);
+      var tNode = style.children[0];
+      processInlineCSS(tNode, { proxyUrl: proxyUrl, baseUrl: "test.com"});
+
+      assert.equal(tNode.text, txt);
+    });
+
+    it('adds proxy to a url() statement', function() {
+      var txt = ['.class {\nbackground: url(', 'images/1.jpg', ');\n}'];
+      var style = h('style', [txt.join('')]);
+      var tNode = style.children[0];
+      processInlineCSS(tNode, { proxyUrl: proxyUrl, baseUrl: "http://test.com"});
+
+      assert.equal(tNode.text, txt[0] + "'" + proxyUrl + "http:/test.com/images/1.jpg'" + txt[2]);
+    });
+
+    it('adds proxy to multiple url() statement with quotes and whitespaces', function() {
+      var txt = '.class {\nbackground: url(images/2.jpg  );\n\
+                 .another {\nbackground-url:url( \t \'https://images.com/img.png\');\n}';
+      var style = h('style', txt);
+      var tNode = style.children[0];
+      processInlineCSS(tNode, { proxyUrl: proxyUrl, baseUrl: "http://test.com"});
+
+      assert.equal(tNode.text, '.class {\nbackground: url(\'' + proxyUrl + 'http:/test.com/images/2.jpg\');\n\
+                 .another {\nbackground-url:url(\'' + proxyUrl + 'https:/images.com/img.png\');\n}');
+    });
+  });
+
   describe('#vNodeCleanupUrls()', function() {
     it('replaces all src adding the proxy url and passing the src value expanded', function() {
       for (var i = 0; i < validUrls.length; i++) {
@@ -186,6 +251,17 @@ describe('vdom-ext', function() {
         var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
 
         assert.equal('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP', node.properties.href);
+      }
+    });
+
+    it('replaces all url() statements in inline CSS adding the proxy url and passing the href value expanded', function() {
+      var txt1 = '@import url(\'';
+      var txt2 = '\');';
+      for (var i = 0; i < validUrls.length; i++) {
+        var node = h('style', [txt1 + validUrls[i] + txt2]);
+        var actual = vNodeCleanupUrls(node, proxyUrl, 'http://test.com/');
+
+        assert.equal(node.children[0].text, txt1 + expandedUrls[i] + txt2);
       }
     });
   });
@@ -237,19 +313,26 @@ describe('vdom-ext', function() {
     });
 
     it('processes a VirtualPatch.VTEXT', function() {
+      var txt1 = '@import url(\'';
+      var url = '/1.png';
+      var newUrl = '/updated-image1.png';
+      var txt2 = '\');';
+      var tree = createTree(h('style', [txt1 + url + txt2]));
+
       // Change text of a VText
       //  * VirtualPatch.VTEXT == 1
       //  * type(VText) == 1
-      var expected = {
-        "77": [
-          [ 1, { t: 1, x: "/1.png" } ]
-        ]};
-      var actual = {
-        "77": [
-          [ 1, { t: 1, x: "/1.png" } ]
-        ]};
+      var expected = [
+          [ 1, { t: 1, x: txt1 + proxyUrl + 'http:/test.com' + newUrl + txt2} ]
+        ];
+      var actual = [
+          [ 1, { t: 1, x: txt1 + newUrl + txt2 } ]
+        ];
 
-      patchCleanupUrls(actual, proxyUrl, 'http://test.com/');
+      patchCleanupUrls({
+        a: tree, // virtual tree is expected to be stored in the patch; otherwise we cannot determine if it is a 'style' node or not
+        3: actual // index of 'style' node's inner text in the tree is 3
+      }, proxyUrl, 'http://test.com/');
 
       assert.deepEqual(actual, expected);
     });
@@ -339,15 +422,15 @@ describe('vdom-ext', function() {
     });
 
     it('processes a VirtualPatch.INSERT', function() {
+      var tree = createTree();
       // Change a VNode
       //  * VirtualPatch.INSERT == 6
       //  * type(VText) == 1
       //  * type(VNode) == 3
-      var expected = {
-        "309": [
-          [ 6, { t: 1, x: "lorem ipsum" }], // insert text node
-          [
-            6, {
+      var expected = [
+        [ 6, { t: 1, x: "lorem ipsum" }], // insert text node
+        [
+          6, {
             t: 3,
             tn: "A",
             p: {
@@ -357,14 +440,25 @@ describe('vdom-ext', function() {
               { t: 3, tn: "IMG", p: { src: proxyUrl + "http:/test.com/2.png" }, c: [] }
             ]
           }
-          ]
+        ],
+        [
+          6, {
+            t: 3,
+            tn: "STYLE",
+            p: {},
+            c: [
+              {
+                t: 1,
+                x: "background: url('" + proxyUrl + "http:/test.com/background.png');" // inline CSS
+              }
+            ]
+          }
         ]
-      };
-      var actual = {
-        "309": [
-          [ 6, { t: 1, x: "lorem ipsum" }], // insert text node
-          [
-            6, {
+      ];
+      var actual = [
+        [ 6, { t: 1, x: "lorem ipsum" }], // insert text node
+        [
+          6, {
             t: 3,
             tn: "A",
             p: {
@@ -374,11 +468,26 @@ describe('vdom-ext', function() {
               { t: 3, tn: "IMG", p: { src: "/2.png" }, c: [] }
             ]
           }
+        ],
+        [
+          6, {
+          t: 3,
+          tn: "STYLE",
+          p: {},
+          c: [
+            {
+              t: 1,
+              x: "background: url(background.png);" // inline CSS
+            }
           ]
+        }
         ]
-      };
+      ];
 
-      patchCleanupUrls(actual, proxyUrl, 'http://test.com/');
+      patchCleanupUrls({
+        1: actual,
+        a: tree // virtual tree is expected to be stored in the patch; otherwise we cannot determine if it is a 'style' node or not
+      }, proxyUrl, 'http://test.com/');
 
       assert.deepEqual(actual, expected);
     });
