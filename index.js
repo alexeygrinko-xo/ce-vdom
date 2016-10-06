@@ -98,6 +98,7 @@ function diff(before, after, options) {
 function preparePatch(originalDOM, patches) {
   if (!patches.a) {
     var vtree = parse(originalDOM);
+    patches.vtree = vtree;
     patches.a = serialize(vdomDiff(vtree, vtree)).a;
   }
 
