@@ -195,7 +195,7 @@ function vNodeCleanupUrls(root, proxyUrl, baseUrl) {
     if (isVNode(current)) {
       processNodeProperties(current.properties, { proxyUrl: proxyUrl, baseUrl: baseUrl });
 
-      if (current.tagName === "STYLE") {
+      if (current.tagName === "STYLE" && current.children[0]) {
         processInlineCSS(current.children[0], { proxyUrl: proxyUrl, baseUrl: baseUrl });
       }
     }
